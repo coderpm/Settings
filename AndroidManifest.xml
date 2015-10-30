@@ -1976,6 +1976,25 @@
                 android:resource="@id/notification_settings" />
         </activity>
 
+        <!-- Added by Pratham Malik for Notification bin -->
+
+        <!-- Activity being added for displaying the existing applications-->
+        <activity android:name="Settings$NotificationBinHiddenActivity"
+                android:label="@string/notificationbin_app_title"
+                android:exported="true"
+                android:taskAffinity="">
+        </activity>
+
+
+        <!-- Activity being added for building the stored sticky notifications-->
+        <activity android:name="Settings$NotificationBinStoredActivity"
+                android:label="@string/notificationbin_app_title"
+                android:exported="true"
+                android:taskAffinity="">
+        </activity>        
+
+        <!-- End of additions by Pratham Malik for Notification bin -->
+
         <!-- Show regulatory info (from settings item or dialing "*#07#") -->
         <activity android:name="RegulatoryInfoDisplayActivity"
                   android:label="@string/regulatory_information"

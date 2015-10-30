@@ -119,4 +119,28 @@
 
     </PreferenceCategory>
 
+    <!-- Added by Pratham Malik for Notification Bin -->
+    
+    <PreferenceCategory
+        android:key="notification"
+        android:title="@string/notification_bin_header" >
+
+        <!-- App notifications bin settings-->
+        <PreferenceScreen
+                android:key="app_notifications_bin"
+                android:title="@string/notificationbin_app_title"
+                android:fragment="com.android.settings.notification.NotificationBinHidden" />
+
+        <!-- notifications bin for holding all -->
+        <PreferenceScreen
+                android:key="app_notifications_bin"
+                android:title="@string/notificationbin_Sticky_title"
+                android:fragment="com.android.settings.notification.NotificationBinStored" />
+
+
+    </PreferenceCategory>
+
+    <!-- End of additions by Pratham Malik for Notification Bin -->
+
+
 </PreferenceScreen>

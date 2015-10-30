@@ -5682,7 +5682,7 @@
     <string name="zen_mode_option_off">Always interrupt</string>
 
     <!-- Sound & notification > Sound section: Zen mode option: Important interruptions [CHAR LIMIT=60] -->
-    <string name="zen_mode_option_important_interruptions">Allow only priority interruptions</string>
+    <string name="zen_mode_option_important_interruptions">Allow only tiority interruptions</string>
 
     <!-- Sound & notification > Sound section: Zen mode option: No interruptions [CHAR LIMIT=60] -->
     <string name="zen_mode_option_no_interruptions">Don\'t interrupt</string>
@@ -5848,6 +5848,12 @@
 
     <!-- [CHAR LIMIT=20] Notification settings: App notifications dialog dismiss button caption -->
     <string name="app_notifications_dialog_done">Done</string>
+
+    <!-- Added by Pratham Malik for Notification Bin -->
+    <string name="notification_bin_header">Notification Bin</string>
+    <string name="notificationbin_app_title">App sticky notifications</string>
+    <string name="notificationbin_Sticky_title">Hidden Sticky Notifications</string>    
+    <!-- End of additions by Pratham Malik for Notification Bin -->
 
     <!-- [CHAR LIMIT=30] Zen mode settings: Exit condition selection dialog, default option -->
     <string name="zen_mode_default_option">Until you turn this off</string>
