@@ -1,19 +1,3 @@
-/*
- * Copyright (C) 2014 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package com.android.settings.notification;
 
 import static com.android.settings.notification.AppNotificationSettings.EXTRA_HAS_SETTINGS_INTENT;
@@ -69,26 +53,15 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
-//Added by Pratham Malik for Notification Bin
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import android.content.Context;
-import android.util.JsonReader;
-import java.io.BufferedReader;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 
-
-//End of additions by Pratham Malik for Notification Bin
+import android.content.HiddenNotificationData;
+import android.service.notification.StatusBarNotification;
 
 
 /** Just a sectioned list of installed applications, nothing else to index **/
 public class NotificationBinStored extends PinnedHeaderListFragment
         implements OnItemSelectedListener {
-    private static final String TAG = "NotificationBinStored";
+    private static final String TAG = "NotificationAppList";
     private static final boolean DEBUG = Log.isLoggable(TAG, Log.DEBUG);
 
     private static final String EMPTY_SUBTITLE = "";
@@ -99,16 +72,14 @@ public class NotificationBinStored extends PinnedHeaderListFragment
                 .addCategory(Notification.INTENT_CATEGORY_NOTIFICATION_PREFERENCES);
 
     private final Handler mHandler = new Handler();
-    private final ArrayMap<String, AppRow> mRows = new ArrayMap<String, AppRow>();
-    private final ArrayList<AppRow> mSortedRows = new ArrayList<AppRow>();
+//    private final ArrayMap<String, AppRow> mRows = new ArrayMap<String, AppRow>();
+    private final ArrayList<AppRow> mRows = new ArrayList<AppRow>();
     private final ArrayList<String> mSections = new ArrayList<String>();
 
     private Context mContext;
     private LayoutInflater mInflater;
-    private NotificationAppAdapter mAdapter;
     private Signature[] mSystemSignature;
     private Parcelable mListViewState;
-    private Backend mBackend = new Backend();
     private UserSpinnerAdapter mProfileSpinnerAdapter;
     private Spinner mSpinner;
 
@@ -116,67 +87,38 @@ public class NotificationBinStored extends PinnedHeaderListFragment
     private UserManager mUM;
     private LauncherApps mLauncherApps;
 
+
+    private HiddenNotificationData hiddenNotificationObj;
+    private ArrayMap<String,AppRow> mStick = new ArrayMap<String,AppRow>();
+    private ArrayList<StatusBarNotification> mNotifications = new ArrayList<StatusBarNotification>(); 
+    private NotificationBinAdapter mAdapter;
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
-        Log.d("YAAP", " D Inside onCreate of NotificationBinStored");
-        Log.v("YAAP", " V Inside onCreate of NotificationBinStored");
-         Log.i("YAAP", "i Inside onCreate of NotificationBinStored");
-        Log.w("YAAP", "W Inside onCreate of NotificationBinStored");
-         Log.e("YAAP", "e Inside onCreate of NotificationBinStored");
-        Log.wtf("YAAP", "wtf Inside onCreate of NotificationBinStored");
-
-   super.onCreate(savedInstanceState);
-     
+        super.onCreate(savedInstanceState);
         mContext = getActivity();
         mInflater = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-        mAdapter = new NotificationAppAdapter(mContext);
+        mAdapter = new NotificationBinAdapter(mContext);
         mUM = UserManager.get(mContext);
-        mPM = mContext.getPackageManager();
 
-//Added by Pratham Malik for Notification Bin
+        hiddenNotificationObj = new HiddenNotificationData().getSharedInstance();
 
-InputStream is = mContext.getResources().openRawResource(R.raw.file);
-InputStreamReader isr = new InputStreamReader(is);
-BufferedReader br = new BufferedReader(isr, 8192); 
-
-try{
-    String test;
-    while (true) {
-            test = br.readLine();
-            // readLine() returns null if no more lines in the file
-            if (test == null)
-                break;
-        }
-
-        Log.d("YAAP", "Inside onCreate of NotificationBinStored --string is " + test);
-
-        isr.close();
-        is.close();
-        br.close();
-}catch (IOException e) {
-        e.printStackTrace();
-    }
-
-
-//End of additions by Pratham Malik for Notification Bin
-
-        mLauncherApps = (LauncherApps) mContext.getSystemService(Context.LAUNCHER_APPS_SERVICE);
-        getActivity().setTitle(R.string.app_notifications_title);
+        getActivity().setTitle(R.string.notificationbin_stored_title);
+         Log.d("YAAP", "Inside onCreate of NotificationBinStored");
+         Log.wtf(TAG, "YAAP");
+         Log.d(TAG, "YAAP");
+    
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
             Bundle savedInstanceState) {
-                Log.d("YAAP", "Inside onCreateView of NotificationBinStored");
-
-        return inflater.inflate(R.layout.notification_app_list, container, false);
+        return inflater.inflate(R.layout.notification_bin_list, container, false);
     }
 
     @Override
     public void onViewCreated(View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-                Log.d("YAAP", "Inside onViewCreated of NotificationBinStored");
-
         mProfileSpinnerAdapter = Utils.createUserSpinnerAdapter(mUM, mContext);
         if (mProfileSpinnerAdapter != null) {
             mSpinner = (Spinner) getActivity().getLayoutInflater().inflate(
@@ -190,8 +132,6 @@ try{
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
-                Log.d("YAAP", "Inside onActivityCreated of NotificationBinStored");
-
         repositionScrollbar();
         getListView().setAdapter(mAdapter);
     }
@@ -199,8 +139,6 @@ try{
     @Override
     public void onPause() {
         super.onPause();
-                Log.d("YAAP", "Inside onPause of NotificationBinStored");
-
         if (DEBUG) Log.d(TAG, "Saving listView state");
         mListViewState = getListView().onSaveInstanceState();
     }
@@ -208,29 +146,19 @@ try{
     @Override
     public void onDestroyView() {
         super.onDestroyView();
-                Log.d("YAAP", "Inside onDestroyView of NotificationBinStored");
-
         mListViewState = null;  // you're dead to me
     }
 
     @Override
     public void onResume() {
         super.onResume();
-                Log.d("YAAP", "Inside onResume of NotificationBinStored");
-
         loadAppsList();
     }
 
     @Override
     public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
         UserHandle selectedUser = mProfileSpinnerAdapter.getUserHandle(position);
-                Log.d("YAAP", "Inside onItemSelected of NotificationBinStored");
-
         if (selectedUser.getIdentifier() != UserHandle.myUserId()) {
-            Intent intent = new Intent(getActivity(), NotificationAppListActivity.class);
-            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
-            mContext.startActivityAsUser(intent, selectedUser);
             // Go back to default selection, which is the first one; this makes sure that pressing
             // the back button takes you into a consistent state
             mSpinner.setSelection(0);
@@ -241,20 +169,11 @@ try{
     public void onNothingSelected(AdapterView<?> parent) {
     }
 
-    public void setBackend(Backend backend) {
-                Log.d("YAAP", "Inside setBackend of NotificationBinStored");
-        mBackend = backend;
-    }
-
     private void loadAppsList() {
-                Log.d("YAAP", "Inside loadAppsList of NotificationBinStored");
-
         AsyncTask.execute(mCollectAppsRunnable);
     }
 
     private String getSection(CharSequence label) {
-                Log.d("YAAP", "Inside getSection of NotificationBinStored");
-
         if (label == null || label.length() == 0) return SECTION_BEFORE_A;
         final char c = Character.toUpperCase(label.charAt(0));
         if (c < 'A') return SECTION_BEFORE_A;
@@ -263,8 +182,6 @@ try{
     }
 
     private void repositionScrollbar() {
-                Log.d("YAAP", "Inside repositionScrollbar of NotificationBinStored");
-
         final int sbWidthPx = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP,
                 getListView().getScrollBarSize(),
                 getResources().getDisplayMetrics());
@@ -277,15 +194,7 @@ try{
                 parent.getPaddingEnd() - eat, parent.getPaddingBottom());
     }
 
-    /**Added by Pratham Malik for Notification Bin
-    public String getStoredNotification()
-    {
-        Log.d("YAAP_____getStoredNotification","Entered the method");
-    }
-
-    //End of additions by Pratham Malik for Notification Bin
-    */
-
+    /** Corresponds to entries in R.layout.notification_bin_list **/
     private static class ViewHolder {
         ViewGroup row;
         ImageView icon;
@@ -294,39 +203,50 @@ try{
         View rowDivider;
     }
 
-    private class NotificationAppAdapter extends ArrayAdapter<Row> implements SectionIndexer {
-        public NotificationAppAdapter(Context context) {
+    public static class AppRow {
+        
+        //Used for StatusBarNotification objcet fields        
+        public String pkg;
+        public int id;
+        public String tag;
+      
+        public int uid;
+        public String opPkg;
+        public int initialPid;
+        public Notification notification;
+        public UserHandle user;
+        public long postTime;
+
+    }
+
+    private class NotificationBinAdapter extends ArrayAdapter<AppRow> {
+        public NotificationBinAdapter(Context context) {
             super(context, 0, 0);
         }
 
         @Override
         public boolean hasStableIds() {
-                    Log.d("YAAP", "Inside hasStableIds of NotificationBinStored");
             return true;
         }
 
         @Override
         public long getItemId(int position) {
-                    Log.d("YAAP", "Inside getItemId of NotificationBinStored");
             return position;
         }
 
         @Override
         public int getViewTypeCount() {
-                    Log.d("YAAP", "Inside getViewTypeCount of NotificationBinStored");
             return 2;
         }
 
         @Override
         public int getItemViewType(int position) {
-                    Log.d("YAAP", "Inside getItemViewType of NotificationBinStored");
-            Row r = getItem(position);
+            AppRow r = getItem(position);
             return r instanceof AppRow ? 1 : 0;
         }
 
         public View getView(int position, View convertView, ViewGroup parent) {
-                    Log.d("YAAP", "Inside getView of NotificationBinStored");
-            Row r = getItem(position);
+            AppRow r = getItem(position);
             View v;
             if (convertView == null) {
                 v = newView(parent, r);
@@ -337,8 +257,7 @@ try{
             return v;
         }
 
-        public View newView(ViewGroup parent, Row r) {
-                    Log.d("YAAP", "Inside newView of NotificationBinStored");
+        public View newView(ViewGroup parent, AppRow r) {
             if (!(r instanceof AppRow)) {
                 return mInflater.inflate(R.layout.notification_app_section, parent, false);
             }
@@ -347,7 +266,6 @@ try{
             vh.row = (ViewGroup) v;
             vh.row.setLayoutTransition(new LayoutTransition());
             vh.row.setLayoutTransition(new LayoutTransition());
-            vh.icon = (ImageView) v.findViewById(android.R.id.icon);
             vh.title = (TextView) v.findViewById(android.R.id.title);
             vh.subtitle = (TextView) v.findViewById(android.R.id.text1);
             vh.rowDivider = v.findViewById(R.id.row_divider);
@@ -356,7 +274,6 @@ try{
         }
 
         private void enableLayoutTransitions(ViewGroup vg, boolean enabled) {
-                    Log.d("YAAP", "Inside enableLayoutTransitions of NotificationBinStored");
             if (enabled) {
                 vg.getLayoutTransition().enableTransitionType(LayoutTransition.APPEARING);
                 vg.getLayoutTransition().enableTransitionType(LayoutTransition.DISAPPEARING);
@@ -366,343 +283,103 @@ try{
             }
         }
 
-        public void bindView(final View view, Row r, boolean animate) {
-                    Log.d("YAAP", "Inside bindView of NotificationBinStored");
+        public void bindView(final View view, AppRow r, boolean animate) {
             if (!(r instanceof AppRow)) {
                 // it's a section row
                 final TextView tv = (TextView)view.findViewById(android.R.id.title);
-                tv.setText(r.section);
+                tv.setText(r.pkg);
                 return;
             }
 
-            final AppRow row = (AppRow)r;
+            final AppRow row = r;
             final ViewHolder vh = (ViewHolder) view.getTag();
             enableLayoutTransitions(vh.row, animate);
-            vh.rowDivider.setVisibility(row.first ? View.GONE : View.VISIBLE);
             vh.row.setOnClickListener(new OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                            Log.d("YAAP", "Inside onClick of NotificationBinStored");
-                    mContext.startActivity(new Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS)
-                            .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
-                            .putExtra(Settings.EXTRA_APP_PACKAGE, row.pkg)
-                            .putExtra(Settings.EXTRA_APP_UID, row.uid)
-                            .putExtra(EXTRA_HAS_SETTINGS_INTENT, row.settingsIntent != null)
-                            .putExtra(EXTRA_SETTINGS_INTENT, row.settingsIntent));
                 }
             });
+
             enableLayoutTransitions(vh.row, animate);
-            vh.icon.setImageDrawable(row.icon);
-            vh.title.setText(row.label);
+            vh.title.setText(row.pkg);
             final String sub = getSubtitle(row);
             vh.subtitle.setText(sub);
             vh.subtitle.setVisibility(!sub.isEmpty() ? View.VISIBLE : View.GONE);
         }
 
         private String getSubtitle(AppRow row) {
-                    Log.d("YAAP", "Inside getSubtitle of NotificationBinStored");
-            if (row.banned) {
-                return mContext.getString(R.string.app_notification_row_banned);
-            }
-            if (!row.priority && !row.sensitive) {
-                return EMPTY_SUBTITLE;
-            }
-            final String priString = mContext.getString(R.string.app_notification_row_priority);
-            final String senString = mContext.getString(R.string.app_notification_row_sensitive);
-            if (row.priority != row.sensitive) {
-                return row.priority ? priString : senString;
-            }
-            return priString + mContext.getString(R.string.summary_divider_text) + senString;
+            int userid = row.uid;
+            String subTitle = Integer.toString(userid);
+            return subTitle;
         }
 
-        @Override
-        public Object[] getSections() {
-                    Log.d("YAAP", "Inside getSections of NotificationBinStored");
-            return mSections.toArray(new Object[mSections.size()]);
-        }
 
-        @Override
-        public int getPositionForSection(int sectionIndex) {
-                    Log.d("YAAP", "Inside getPositionForSection of NotificationBinStored");
-            final String section = mSections.get(sectionIndex);
-            final int n = getCount();
-            for (int i = 0; i < n; i++) {
-                final Row r = getItem(i);
-                if (r.section.equals(section)) {
-                    return i;
-                }
-            }
-            return 0;
-        }
+    } /** End of NotificationBinAdapter class **/
 
-        @Override
-        public int getSectionForPosition(int position) {
-                    Log.d("YAAP", "Inside getSectionForPosition of NotificationBinStored");
-            Row row = getItem(position);
-            return mSections.indexOf(row.section);
-        }
-    }
-
-    private static class Row {
-        public String section;
-    }
-
-    public static class AppRow extends Row {
-        public String pkg;
-        public int uid;
-        public Drawable icon;
-        public CharSequence label;
-        public Intent settingsIntent;
-        public boolean banned;
-        public boolean priority;
-        public boolean sensitive;
-        public boolean first;  // first app in section
-    }
-
+    /** Use this if items in view need to be sorted  
     private static final Comparator<AppRow> mRowComparator = new Comparator<AppRow>() {
         private final Collator sCollator = Collator.getInstance();
         @Override
         public int compare(AppRow lhs, AppRow rhs) {
-                    Log.d("YAAP", "Inside compare of NotificationBinStored");
             return sCollator.compare(lhs.label, rhs.label);
         }
     };
+**/ 
 
-
-    public static AppRow loadAppRow(PackageManager pm, ApplicationInfo app,
-            Backend backend) {
-                Log.d("YAAP", "Inside loadAppRow of NotificationBinStored");
+    public static AppRow loadAppRow(StatusBarNotification statusBarObj) {
         final AppRow row = new AppRow();
-        row.pkg = app.packageName;
-        row.uid = app.uid;
-        try {
-            row.label = app.loadLabel(pm);
-        } catch (Throwable t) {
-            Log.e(TAG, "Error loading application label for " + row.pkg, t);
-            row.label = row.pkg;
-        }
-        row.icon = app.loadIcon(pm);
-        row.banned = backend.getNotificationsBanned(row.pkg, row.uid);
-        row.priority = backend.getHighPriority(row.pkg, row.uid);
-        row.sensitive = backend.getSensitive(row.pkg, row.uid);
+        
+        row.pkg = statusBarObj.getPackageName();
+        row.id = statusBarObj.getId();
+        row.tag = statusBarObj.getTag();
+        row.uid = statusBarObj.getUid();
+        row.opPkg = statusBarObj.getOpPkg();
+        row.initialPid = statusBarObj.getInitialPid();
+        row.notification = statusBarObj.getNotification();
+        row.postTime = statusBarObj.getPostTime();
+
         return row;
-    }
-
-    public static List<ResolveInfo> queryNotificationConfigActivities(PackageManager pm) {
-                Log.d("YAAP", "Inside queryNotificationConfigActivities of NotificationBinStored");
-        if (DEBUG) Log.d(TAG, "APP_NOTIFICATION_PREFS_CATEGORY_INTENT is "
-                + APP_NOTIFICATION_PREFS_CATEGORY_INTENT);
-        final List<ResolveInfo> resolveInfos = pm.queryIntentActivities(
-                APP_NOTIFICATION_PREFS_CATEGORY_INTENT,
-                0 //PackageManager.MATCH_DEFAULT_ONLY
-        );
-        return resolveInfos;
-    }
-    public static void collectConfigActivities(PackageManager pm, ArrayMap<String, AppRow> rows) {
-                Log.d("YAAP", "Inside collectConfigActivities of NotificationBinStored");
-        final List<ResolveInfo> resolveInfos = queryNotificationConfigActivities(pm);
-        applyConfigActivities(pm, rows, resolveInfos);
-    }
-
-    public static void applyConfigActivities(PackageManager pm, ArrayMap<String, AppRow> rows,
-            List<ResolveInfo> resolveInfos) {
-                Log.d("YAAP", "Inside applyConfigActivities of NotificationBinStored");
-        if (DEBUG) Log.d(TAG, "Found " + resolveInfos.size() + " preference activities"
-                + (resolveInfos.size() == 0 ? " ;_;" : ""));
-        for (ResolveInfo ri : resolveInfos) {
-            final ActivityInfo activityInfo = ri.activityInfo;
-            final ApplicationInfo appInfo = activityInfo.applicationInfo;
-            final AppRow row = rows.get(appInfo.packageName);
-            if (row == null) {
-                Log.v(TAG, "Ignoring notification preference activity ("
-                        + activityInfo.name + ") for unknown package "
-                        + activityInfo.packageName);
-                continue;
-            }
-            if (row.settingsIntent != null) {
-                Log.v(TAG, "Ignoring duplicate notification preference activity ("
-                        + activityInfo.name + ") for package "
-                        + activityInfo.packageName);
-                continue;
-            }
-            row.settingsIntent = new Intent(APP_NOTIFICATION_PREFS_CATEGORY_INTENT)
-                    .setClassName(activityInfo.packageName, activityInfo.name);
-        }
     }
 
     private final Runnable mCollectAppsRunnable = new Runnable() {
         @Override
         public void run() {
-                    Log.d("YAAP", "Inside run of Runnable of NotificationBinStored");
+            synchronized (mStick) {
+                
+                if (DEBUG) Log.d(TAG, "Collecting notifications...");
+                mNotifications.clear();
+        mRows.clear();
+                ArrayMap<String,StatusBarNotification> mAllNotifications = new ArrayMap<String,StatusBarNotification>();
+                mAllNotifications = hiddenNotificationObj.getDisplayMap(mContext);
+                //Collect all stored sticky notifications from map
+                
+                mNotifications.addAll(mAllNotifications.values());
+            
+                for(StatusBarNotification notifs : mNotifications){
+                    String key = notifs.getPackageName();
 
-            synchronized (mRows) {
-                final long start = SystemClock.uptimeMillis();
-                if (DEBUG) Log.d(TAG, "Collecting apps...");
-                mRows.clear();
-                mSortedRows.clear();
-
-                // collect all launchable apps, plus any packages that have notification settings
-                final List<ApplicationInfo> appInfos = new ArrayList<ApplicationInfo>();
-
-                final List<LauncherActivityInfo> lais
-                        = mLauncherApps.getActivityList(null /* all */,
-                            UserHandle.getCallingUserHandle());
-                if (DEBUG) Log.d(TAG, "  launchable activities:");
-                for (LauncherActivityInfo lai : lais) {
-                    if (DEBUG) Log.d(TAG, "    " + lai.getComponentName().toString());
-                    appInfos.add(lai.getApplicationInfo());
+                    final AppRow row = loadAppRow(notifs);
+                    mStick.put(key, row);
                 }
-
-                final List<ResolveInfo> resolvedConfigActivities
-                        = queryNotificationConfigActivities(mPM);
-                if (DEBUG) Log.d(TAG, "  config activities:");
-                for (ResolveInfo ri : resolvedConfigActivities) {
-                    if (DEBUG) Log.d(TAG, "    "
-                            + ri.activityInfo.packageName + "/" + ri.activityInfo.name);
-                    appInfos.add(ri.activityInfo.applicationInfo);
-                }
-
-                for (ApplicationInfo info : appInfos) {
-                    final String key = info.packageName;
-                    if (mRows.containsKey(key)) {
-                        // we already have this app, thanks
-                        continue;
-                    }
-
-                    final AppRow row = loadAppRow(mPM, info, mBackend);
-                    mRows.put(key, row);
-                }
-
-                // add config activities to the list
-                applyConfigActivities(mPM, mRows, resolvedConfigActivities);
-
-                // sort rows
-                mSortedRows.addAll(mRows.values());
-                Collections.sort(mSortedRows, mRowComparator);
-                // compute sections
-                mSections.clear();
-                String section = null;
-                for (AppRow r : mSortedRows) {
-                    r.section = getSection(r.label);
-                    if (!r.section.equals(section)) {
-                        section = r.section;
-                        mSections.add(section);
-                    }
-                }
+    
                 mHandler.post(mRefreshAppsListRunnable);
-                final long elapsed = SystemClock.uptimeMillis() - start;
-                if (DEBUG) Log.d(TAG, "Collected " + mRows.size() + " apps in " + elapsed + "ms");
-            }
-        }
+                
+            } 
+        }/** End of run method **/
     };
 
+    /** Write this function if list is not refreshed **/
     private void refreshDisplayedItems() {
-                Log.d("YAAP", "Inside refreshDisplayedItems of NotificationBinStored");
-        if (DEBUG) Log.d(TAG, "Refreshing apps...");
-        mAdapter.clear();
-        synchronized (mSortedRows) {
-            String section = null;
-            final int N = mSortedRows.size();
-            boolean first = true;
-            for (int i = 0; i < N; i++) {
-                final AppRow row = mSortedRows.get(i);
-                if (!row.section.equals(section)) {
-                    section = row.section;
-                    Row r = new Row();
-                    r.section = section;
-                    mAdapter.add(r);
-                    first = true;
-                }
-                row.first = first;
-                mAdapter.add(row);
-                first = false;
-            }
-        }
-        if (mListViewState != null) {
-            if (DEBUG) Log.d(TAG, "Restoring listView state");
-            getListView().onRestoreInstanceState(mListViewState);
-            mListViewState = null;
-        }
-        if (DEBUG) Log.d(TAG, "Refreshed " + mSortedRows.size() + " displayed items");
+        if (DEBUG) Log.d(TAG, "Refreshing notifications...");
+    mAdapter.clear();
+    
+    
     }
 
     private final Runnable mRefreshAppsListRunnable = new Runnable() {
         @Override
         public void run() {
-                    Log.d("YAAP", "Inside run where refreshDisplayedItems of NotificationBinStored");
             refreshDisplayedItems();
         }
     };
-
-    public static class Backend {
-        static INotificationManager sINM = INotificationManager.Stub.asInterface(
-                ServiceManager.getService(Context.NOTIFICATION_SERVICE));
-
-        public boolean setNotificationsBanned(String pkg, int uid, boolean banned) {
-           Log.d("YAAP", "Inside setNotificationsBanned of NotificationBinStored");
-            try {
-                sINM.setNotificationsEnabledForPackage(pkg, uid, !banned);
-                return true;
-            } catch (Exception e) {
-               Log.w(TAG, "Error calling NoMan", e);
-               return false;
-            }
-        }
-
-        public boolean getNotificationsBanned(String pkg, int uid) {
-                    Log.d("YAAP", "Inside getNotificationsBanned of NotificationBinStored");
-            try {
-                final boolean enabled = sINM.areNotificationsEnabledForPackage(pkg, uid);
-                return !enabled;
-            } catch (Exception e) {
-                Log.w(TAG, "Error calling NoMan", e);
-                return false;
-            }
-        }
-
-        public boolean getHighPriority(String pkg, int uid) {
-                    Log.d("YAAP", "Inside getHighPriority of NotificationBinStored");
-            try {
-                return sINM.getPackagePriority(pkg, uid) == Notification.PRIORITY_MAX;
-            } catch (Exception e) {
-                Log.w(TAG, "Error calling NoMan", e);
-                return false;
-            }
-        }
-
-        public boolean setHighPriority(String pkg, int uid, boolean highPriority) {
-                   Log.d("YAAP", "Inside setHighPriority of NotificationBinStored");
-            try {
-                sINM.setPackagePriority(pkg, uid,
-                        highPriority ? Notification.PRIORITY_MAX : Notification.PRIORITY_DEFAULT);
-                return true;
-            } catch (Exception e) {
-                Log.w(TAG, "Error calling NoMan", e);
-                return false;
-            }
-        }
-
-        public boolean getSensitive(String pkg, int uid) {
-                    Log.d("YAAP", "Inside getSensitive of NotificationBinStored");
-            try {
-                return sINM.getPackageVisibilityOverride(pkg, uid) == Notification.VISIBILITY_PRIVATE;
-            } catch (Exception e) {
-                Log.w(TAG, "Error calling NoMan", e);
-                return false;
-            }
-        }
-
-        public boolean setSensitive(String pkg, int uid, boolean sensitive) {
-                    Log.d("YAAP", "Inside setSensitive of NotificationBinStored");
-            try {
-                sINM.setPackageVisibilityOverride(pkg, uid,
-                        sensitive ? Notification.VISIBILITY_PRIVATE
-                                : NotificationListenerService.Ranking.VISIBILITY_NO_OVERRIDE);
-                return true;
-            } catch (Exception e) {
-                Log.w(TAG, "Error calling NoMan", e);
-                return false;
-            }
-        }
-    }
 }

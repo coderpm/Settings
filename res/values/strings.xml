@@ -5850,9 +5850,13 @@
     <string name="app_notifications_dialog_done">Done</string>
 
     <!-- Added by Pratham Malik for Notification Bin -->
+
     <string name="notification_bin_header">Notification Bin</string>
     <string name="notificationbin_app_title">App sticky notifications</string>
     <string name="notificationbin_Sticky_title">Hidden Sticky Notifications</string>    
+    <string name="notificationbin_stored_title">Hidden Stickies</string>
+    <string name="loading_notification_stick">Loading Stickies...</string>
+
     <!-- End of additions by Pratham Malik for Notification Bin -->
 
     <!-- [CHAR LIMIT=30] Zen mode settings: Exit condition selection dialog, default option -->
