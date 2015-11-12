@@ -72,8 +72,8 @@ public class NotificationBinStored extends PinnedHeaderListFragment
                 .addCategory(Notification.INTENT_CATEGORY_NOTIFICATION_PREFERENCES);
 
     private final Handler mHandler = new Handler();
-//    private final ArrayMap<String, AppRow> mRows = new ArrayMap<String, AppRow>();
-    private final ArrayList<AppRow> mRows = new ArrayList<AppRow>();
+    private final ArrayMap<String, AppRow> mRows = new ArrayMap<String, AppRow>();
+    private final ArrayList<AppRow> mSortedRows = new ArrayList<AppRow>();
     private final ArrayList<String> mSections = new ArrayList<String>();
 
     private Context mContext;
@@ -90,7 +90,7 @@ public class NotificationBinStored extends PinnedHeaderListFragment
 
     private HiddenNotificationData hiddenNotificationObj;
     private ArrayMap<String,AppRow> mStick = new ArrayMap<String,AppRow>();
-    private ArrayList<StatusBarNotification> mNotifications = new ArrayList<StatusBarNotification>(); 
+     
     private NotificationBinAdapter mAdapter;
 
     @Override
@@ -105,8 +105,7 @@ public class NotificationBinStored extends PinnedHeaderListFragment
 
         getActivity().setTitle(R.string.notificationbin_stored_title);
          Log.d("YAAP", "Inside onCreate of NotificationBinStored");
-         Log.wtf(TAG, "YAAP");
-         Log.d(TAG, "YAAP");
+         
     
     }
 
@@ -157,19 +156,26 @@ public class NotificationBinStored extends PinnedHeaderListFragment
 
     @Override
     public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+        Log.d("YAAP", "in onItemSelected");
         UserHandle selectedUser = mProfileSpinnerAdapter.getUserHandle(position);
         if (selectedUser.getIdentifier() != UserHandle.myUserId()) {
+            Intent intent = new Intent(getActivity(), NotificationAppListActivity.class);
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            mContext.startActivityAsUser(intent, selectedUser);
             // Go back to default selection, which is the first one; this makes sure that pressing
             // the back button takes you into a consistent state
             mSpinner.setSelection(0);
         }
     }
 
+
     @Override
     public void onNothingSelected(AdapterView<?> parent) {
     }
 
     private void loadAppsList() {
+        Log.d("YAAP","in FUnction loadAppsList");
         AsyncTask.execute(mCollectAppsRunnable);
     }
 
@@ -241,6 +247,7 @@ public class NotificationBinStored extends PinnedHeaderListFragment
 
         @Override
         public int getItemViewType(int position) {
+            Log.d("YAAP", "in getItemViewType");
             AppRow r = getItem(position);
             return r instanceof AppRow ? 1 : 0;
         }
@@ -294,12 +301,17 @@ public class NotificationBinStored extends PinnedHeaderListFragment
             final AppRow row = r;
             final ViewHolder vh = (ViewHolder) view.getTag();
             enableLayoutTransitions(vh.row, animate);
-            vh.row.setOnClickListener(new OnClickListener() {
+           vh.row.setOnClickListener(new OnClickListener() {
                 @Override
                 public void onClick(View v) {
+                    mContext.startActivity(new Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS)
+                            .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+                            .putExtra(Settings.EXTRA_APP_PACKAGE, row.pkg)
+                            .putExtra(Settings.EXTRA_APP_UID, row.uid)
+                            .putExtra(EXTRA_HAS_SETTINGS_INTENT, row.settingsIntent != null)
+                            .putExtra(EXTRA_SETTINGS_INTENT, row.settingsIntent));
                 }
             });
-
             enableLayoutTransitions(vh.row, animate);
             vh.title.setText(row.pkg);
             final String sub = getSubtitle(row);
@@ -316,6 +328,8 @@ public class NotificationBinStored extends PinnedHeaderListFragment
 
     } /** End of NotificationBinAdapter class **/
 
+
+
     /** Use this if items in view need to be sorted  
     private static final Comparator<AppRow> mRowComparator = new Comparator<AppRow>() {
         private final Collator sCollator = Collator.getInstance();
@@ -328,7 +342,7 @@ public class NotificationBinStored extends PinnedHeaderListFragment
 
     public static AppRow loadAppRow(StatusBarNotification statusBarObj) {
         final AppRow row = new AppRow();
-        
+        Log.d("YAAP","Loading StatusBarNotification data in loadAppRow");
         row.pkg = statusBarObj.getPackageName();
         row.id = statusBarObj.getId();
         row.tag = statusBarObj.getTag();
@@ -344,26 +358,30 @@ public class NotificationBinStored extends PinnedHeaderListFragment
     private final Runnable mCollectAppsRunnable = new Runnable() {
         @Override
         public void run() {
-            synchronized (mStick) {
+            synchronized (mrows) {
                 
                 if (DEBUG) Log.d(TAG, "Collecting notifications...");
-                mNotifications.clear();
-        mRows.clear();
+                mRows.clear();
+                mSortedRows.clear();
                 ArrayMap<String,StatusBarNotification> mAllNotifications = new ArrayMap<String,StatusBarNotification>();
                 mAllNotifications = hiddenNotificationObj.getDisplayMap(mContext);
+                Log.d("YAAP", "SIze of mAllNotifications ArrayMap is"+Integer.toString(mAllNotifications.size()));
+
                 //Collect all stored sticky notifications from map
-                
+                private ArrayList<StatusBarNotification> mNotifications = new ArrayList<StatusBarNotification>();
+                Log.d("YAAP", "SIze of mNotifications ArrayList is"+Integer.toString(mANotifications.size()));
+
                 mNotifications.addAll(mAllNotifications.values());
             
                 for(StatusBarNotification notifs : mNotifications){
                     String key = notifs.getPackageName();
 
                     final AppRow row = loadAppRow(notifs);
-                    mStick.put(key, row);
+                    mRows.put(key, row);
                 }
     
+                mSortedRows.addAll(mRows.values());
                 mHandler.post(mRefreshAppsListRunnable);
-                
             } 
         }/** End of run method **/
     };
@@ -371,10 +389,22 @@ public class NotificationBinStored extends PinnedHeaderListFragment
     /** Write this function if list is not refreshed **/
     private void refreshDisplayedItems() {
         if (DEBUG) Log.d(TAG, "Refreshing notifications...");
-    mAdapter.clear();
-    
-    
-    }
+        mAdapter.clear();
+        synchronized (mSortedRows) {
+            String section = null;
+            final int N = mSortedRows.size();
+            boolean first = true;
+            for (int i = 0; i < N; i++) {
+                final AppRow row = mSortedRows.get(i);
+                mAdapter.add(row);
+            }
+        }
+        if (mListViewState != null) {
+            if (DEBUG) Log.d(TAG, "Restoring listView state");
+            getListView().onRestoreInstanceState(mListViewState);
+            mListViewState = null;
+        }
+    } /** End of refreshDisplayedItems **/
 
     private final Runnable mRefreshAppsListRunnable = new Runnable() {
         @Override
