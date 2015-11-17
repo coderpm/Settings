@@ -101,7 +101,7 @@ public class NotificationBinStored extends PinnedHeaderListFragment
         mAdapter = new NotificationBinAdapter(mContext);
         mUM = UserManager.get(mContext);
 
-        hiddenNotificationObj = new HiddenNotificationData().getSharedInstance();
+        hiddenNotificationObj = HiddenNotificationData.getSharedInstance();
 
         getActivity().setTitle(R.string.notificationbin_stored_title);
          Log.d("YAAP", "Inside onCreate of NotificationBinStored");
@@ -307,9 +307,9 @@ public class NotificationBinStored extends PinnedHeaderListFragment
                     mContext.startActivity(new Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS)
                             .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
                             .putExtra(Settings.EXTRA_APP_PACKAGE, row.pkg)
-                            .putExtra(Settings.EXTRA_APP_UID, row.uid)
-                            .putExtra(EXTRA_HAS_SETTINGS_INTENT, row.settingsIntent != null)
-                            .putExtra(EXTRA_SETTINGS_INTENT, row.settingsIntent));
+                            .putExtra(Settings.EXTRA_APP_UID, row.uid));
+//                            .putExtra(EXTRA_HAS_SETTINGS_INTENT, row.settingsIntent != null)
+  //                          .putExtra(EXTRA_SETTINGS_INTENT, row.settingsIntent));
                 }
             });
             enableLayoutTransitions(vh.row, animate);
@@ -358,7 +358,7 @@ public class NotificationBinStored extends PinnedHeaderListFragment
     private final Runnable mCollectAppsRunnable = new Runnable() {
         @Override
         public void run() {
-            synchronized (mrows) {
+            synchronized (mRows) {
                 
                 if (DEBUG) Log.d(TAG, "Collecting notifications...");
                 mRows.clear();
@@ -368,8 +368,8 @@ public class NotificationBinStored extends PinnedHeaderListFragment
                 Log.d("YAAP", "SIze of mAllNotifications ArrayMap is"+Integer.toString(mAllNotifications.size()));
 
                 //Collect all stored sticky notifications from map
-                private ArrayList<StatusBarNotification> mNotifications = new ArrayList<StatusBarNotification>();
-                Log.d("YAAP", "SIze of mNotifications ArrayList is"+Integer.toString(mANotifications.size()));
+                ArrayList<StatusBarNotification> mNotifications = new ArrayList<StatusBarNotification>();
+                Log.d("YAAP", "SIze of mNotifications ArrayList is"+Integer.toString(mNotifications.size()));
 
                 mNotifications.addAll(mAllNotifications.values());
             
