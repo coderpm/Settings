@@ -1426,6 +1426,16 @@
             </intent-filter>
         </receiver>
 
+        <receiver
+                android:name=".notification.NotificationBinStored$SbnRecevier">
+            <intent-filter>
+                <action android:name="com.android.systemui.addHN" />
+                <action android:name="com.android.systemui.removeHN"/>
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </receiver>
+
+
         <service android:name=".bluetooth.DockService" />
 
         <activity android:name=".bluetooth.RequestPermissionActivity"

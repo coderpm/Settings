@@ -6,6 +6,8 @@ import static com.android.settings.notification.AppNotificationSettings.EXTRA_SE
 import android.animation.LayoutTransition;
 import android.app.INotificationManager;
 import android.app.Notification;
+import android.app.NotificationManager;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
@@ -101,6 +103,7 @@ public class NotificationBinStored extends PinnedHeaderListFragment
         mAdapter = new NotificationBinAdapter(mContext);
         mUM = UserManager.get(mContext);
 
+
         hiddenNotificationObj = HiddenNotificationData.getSharedInstance();
 
         getActivity().setTitle(R.string.notificationbin_stored_title);
@@ -108,6 +111,30 @@ public class NotificationBinStored extends PinnedHeaderListFragment
          
     
     }
+
+    public static  class SbnRecevier extends BroadcastReceiver{
+
+        @Override
+        public void onReceive(Context context, Intent intent) {
+
+
+            String action = intent.getAction();
+            Log.d("YAAP","SBN Receiver "+ action);
+
+            HiddenNotificationData hiddenNotificationData = HiddenNotificationData.getSharedInstance();
+
+            if (action.equals("com.android.systemui.addHN")){
+                StatusBarNotification sbn = intent.getParcelableExtra("com.android.systemui.sbn");
+                hiddenNotificationData.add(sbn.getKey(),sbn,sbn);
+            }else if(action.equals("com.android.systemui.removeHN")){
+                String key = intent.getStringExtra("com.android.systemui.hnkey");
+                hiddenNotificationData.remove(key);
+            }else{
+                Log.e("YAAP","Unknown sbn action intent");
+            }
+        }
+    }
+
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
