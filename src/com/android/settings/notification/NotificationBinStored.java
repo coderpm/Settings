@@ -344,9 +344,12 @@ public class NotificationBinStored extends PinnedHeaderListFragment
 //                            .putExtra(EXTRA_HAS_SETTINGS_INTENT, row.settingsIntent != null)
   //                          .putExtra(EXTRA_SETTINGS_INTENT, row.settingsIntent));
                 }
-            });
+            }); /** End of onClick row listener  **/
+
+
             enableLayoutTransitions(vh.row, animate);
             vh.title.setText(row.pkg);
+            vh.icon.setImageDrawable(row.icon);
             final String sub = getSubtitle(row);
             vh.subtitle.setText(sub);
             vh.subtitle.setVisibility(!sub.isEmpty() ? View.VISIBLE : View.GONE);
@@ -373,6 +376,10 @@ public class NotificationBinStored extends PinnedHeaderListFragment
         row.initialPid = statusBarObj.getInitialPid();
         row.notification = statusBarObj.getNotification();
         row.postTime = statusBarObj.getPostTime();
+
+        ApplicationInfo appIn = mPM.getApplicationInfo("row.pkg"); 
+        row.icon = mPM.getApplicationIcon(appIn);
+        
 
         return row;
     }
