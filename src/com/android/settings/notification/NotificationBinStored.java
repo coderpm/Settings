@@ -102,14 +102,15 @@ public class NotificationBinStored extends PinnedHeaderListFragment
         mInflater = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         mAdapter = new NotificationBinAdapter(mContext);
         mUM = UserManager.get(mContext);
+        mPM = mContext.getPackageManager();
+        mLauncherApps = (LauncherApps) mContext.getSystemService(Context.LAUNCHER_APPS_SERVICE);
 
 
         hiddenNotificationObj = HiddenNotificationData.getSharedInstance();
 
         getActivity().setTitle(R.string.notificationbin_stored_title);
          Log.d("YAAP", "Inside onCreate of NotificationBinStored");
-         
-    
+             
     }
 
     public static  class SbnRecevier extends BroadcastReceiver{
@@ -238,7 +239,7 @@ public class NotificationBinStored extends PinnedHeaderListFragment
 
     public static class AppRow {
         
-        //Used for StatusBarNotification objcet fields        
+        //Used for StatusBarNotification object fields        
         public String pkg;
         public int id;
         public String tag;
@@ -249,6 +250,9 @@ public class NotificationBinStored extends PinnedHeaderListFragment
         public Notification notification;
         public UserHandle user;
         public long postTime;
+
+        public Drawable icon;
+        public Intent settingsIntent;
 
     }
 
@@ -328,7 +332,9 @@ public class NotificationBinStored extends PinnedHeaderListFragment
             final AppRow row = r;
             final ViewHolder vh = (ViewHolder) view.getTag();
             enableLayoutTransitions(vh.row, animate);
-           vh.row.setOnClickListener(new OnClickListener() {
+           
+            //onCLick Listener for each row
+            vh.row.setOnClickListener(new OnClickListener() {
                 @Override
                 public void onClick(View v) {
                     mContext.startActivity(new Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS)
@@ -355,17 +361,6 @@ public class NotificationBinStored extends PinnedHeaderListFragment
 
     } /** End of NotificationBinAdapter class **/
 
-
-
-    /** Use this if items in view need to be sorted  
-    private static final Comparator<AppRow> mRowComparator = new Comparator<AppRow>() {
-        private final Collator sCollator = Collator.getInstance();
-        @Override
-        public int compare(AppRow lhs, AppRow rhs) {
-            return sCollator.compare(lhs.label, rhs.label);
-        }
-    };
-**/ 
 
     public static AppRow loadAppRow(StatusBarNotification statusBarObj) {
         final AppRow row = new AppRow();
@@ -396,17 +391,17 @@ public class NotificationBinStored extends PinnedHeaderListFragment
 
                 //Collect all stored sticky notifications from map
                 ArrayList<StatusBarNotification> mNotifications = new ArrayList<StatusBarNotification>();
-                Log.d("YAAP", "SIze of mNotifications ArrayList is"+Integer.toString(mNotifications.size()));
-
                 mNotifications.addAll(mAllNotifications.values());
-            
+                Log.d("YAAP", "SIze of mNotifications ArrayList is"+Integer.toString(mNotifications.size()));
+   
+
                 for(StatusBarNotification notifs : mNotifications){
-                    String key = notifs.getPackageName();
+                    String key = notifs.getPackageName() + Integer.toString(notifs.getPostTime()) + Long.toString(notifs.getId());
 
                     final AppRow row = loadAppRow(notifs);
                     mRows.put(key, row);
                 }
-    
+
                 mSortedRows.addAll(mRows.values());
                 mHandler.post(mRefreshAppsListRunnable);
             } 
