@@ -350,13 +350,18 @@ public class NotificationBinStored extends PinnedHeaderListFragment
             }); /** End of onClick row listener  **/
 
             //Implement Listener for Button
-            vh.removeNotificationButton.setOnClickListener(new OnClickListener){
+            vh.removeNotificationButton.setOnClickListener(new OnClickListener() {
                 @Override
-                public void onClick(View v){
+                public void onClick(View v) {
+                    //TODO: FIrst remove this code and write new                     
                     //Remove the notification and do the broadcast event thing
-
+                    mContext.startActivity(new Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS)
+                            .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+                            .putExtra(Settings.EXTRA_APP_PACKAGE, row.pkg)
+                            .putExtra(Settings.EXTRA_APP_UID, row.uid));
                 }
-            }); /** End of onClick button listener  **/
+            });  /** End of onClick button listener  **/
+
             
 
             enableLayoutTransitions(vh.row, animate);
