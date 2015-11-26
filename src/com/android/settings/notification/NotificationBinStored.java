@@ -85,7 +85,7 @@ public class NotificationBinStored extends PinnedHeaderListFragment
     private UserSpinnerAdapter mProfileSpinnerAdapter;
     private Spinner mSpinner;
 
-    private PackageManager mPM;
+    private static PackageManager mPM;
     private UserManager mUM;
     private LauncherApps mLauncherApps;
 
@@ -377,9 +377,9 @@ public class NotificationBinStored extends PinnedHeaderListFragment
         row.notification = statusBarObj.getNotification();
         row.postTime = statusBarObj.getPostTime();
 
-        ApplicationInfo appIn = mPM.getApplicationInfo("row.pkg"); 
+        ApplicationInfo appIn = mPM.getApplicationInfo("row.pkg",0); 
         row.icon = mPM.getApplicationIcon(appIn);
-        
+
 
         return row;
     }
@@ -403,7 +403,7 @@ public class NotificationBinStored extends PinnedHeaderListFragment
    
 
                 for(StatusBarNotification notifs : mNotifications){
-                    String key = notifs.getPackageName() + Integer.toString(notifs.getPostTime()) + Long.toString(notifs.getId());
+                    String key = notifs.getPackageName() + Long.toString(notifs.getPostTime()) + Integer.toString(notifs.getId());
 
                     final AppRow row = loadAppRow(notifs);
                     mRows.put(key, row);
