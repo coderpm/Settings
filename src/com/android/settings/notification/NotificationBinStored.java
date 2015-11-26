@@ -42,6 +42,7 @@ import android.widget.ImageView;
 import android.widget.SectionIndexer;
 import android.widget.Spinner;
 import android.widget.TextView;
+import android.widget.Button;
 
 import com.android.settings.PinnedHeaderListFragment;
 import com.android.settings.R;
@@ -235,6 +236,7 @@ public class NotificationBinStored extends PinnedHeaderListFragment
         TextView title;
         TextView subtitle;
         View rowDivider;
+        Button removeNotificationButton;
     }
 
     public static class AppRow {
@@ -299,13 +301,14 @@ public class NotificationBinStored extends PinnedHeaderListFragment
             if (!(r instanceof AppRow)) {
                 return mInflater.inflate(R.layout.notification_app_section, parent, false);
             }
-            final View v = mInflater.inflate(R.layout.notification_app, parent, false);
+            final View v = mInflater.inflate(R.layout.notification_bin, parent, false);
             final ViewHolder vh = new ViewHolder();
             vh.row = (ViewGroup) v;
             vh.row.setLayoutTransition(new LayoutTransition());
             vh.row.setLayoutTransition(new LayoutTransition());
             vh.title = (TextView) v.findViewById(android.R.id.title);
             vh.subtitle = (TextView) v.findViewById(android.R.id.text1);
+            vh.removeNotificationButton = (Button) v.findViewById(android.R.id.button_send);
             vh.rowDivider = v.findViewById(R.id.row_divider);
             v.setTag(vh);
             return v;
@@ -346,6 +349,15 @@ public class NotificationBinStored extends PinnedHeaderListFragment
                 }
             }); /** End of onClick row listener  **/
 
+            //Implement Listener for Button
+            vh.removeNotificationButton.setOnClickListener(new OnClickListener){
+                @Override
+                public void onClick(View v){
+                    //Remove the notification and do the broadcast event thing
+
+                }
+            }); /** End of onClick button listener  **/
+            
 
             enableLayoutTransitions(vh.row, animate);
             vh.title.setText(row.pkg);
@@ -377,8 +389,14 @@ public class NotificationBinStored extends PinnedHeaderListFragment
         row.notification = statusBarObj.getNotification();
         row.postTime = statusBarObj.getPostTime();
 
+        try{
         ApplicationInfo appIn = mPM.getApplicationInfo("row.pkg",0); 
         row.icon = mPM.getApplicationIcon(appIn);
+
+    }catch(NameNotFoundException e){
+        Log.d("YAAP","Application name not found in APPINFO");
+        e.printStackTrace();
+    }
 
 
         return row;

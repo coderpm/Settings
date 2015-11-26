@@ -5856,7 +5856,7 @@
     <string name="notificationbin_Sticky_title">Hidden Sticky Notifications</string>    
     <string name="notificationbin_stored_title">Hidden Stickies</string>
     <string name="loading_notification_stick">Loading Stickies...</string>
-
+    <string name="bin_button_text">Unhide</string>
     <!-- End of additions by Pratham Malik for Notification Bin -->
 
     <!-- [CHAR LIMIT=30] Zen mode settings: Exit condition selection dialog, default option -->
