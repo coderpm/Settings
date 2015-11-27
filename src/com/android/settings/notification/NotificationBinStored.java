@@ -15,6 +15,7 @@ import android.content.pm.ApplicationInfo;
 import android.content.pm.LauncherActivityInfo;
 import android.content.pm.LauncherApps;
 import android.content.pm.PackageManager;
+import android.content.pm.PackageManager.NameNotFoundException;
 import android.content.pm.ResolveInfo;
 import android.content.pm.Signature;
 import android.graphics.drawable.Drawable;
@@ -308,7 +309,7 @@ public class NotificationBinStored extends PinnedHeaderListFragment
             vh.row.setLayoutTransition(new LayoutTransition());
             vh.title = (TextView) v.findViewById(android.R.id.title);
             vh.subtitle = (TextView) v.findViewById(android.R.id.text1);
-            vh.removeNotificationButton = (Button) v.findViewById(android.R.id.button_send);
+            vh.removeNotificationButton = (Button) v.findViewById(R.id.button_send);
             vh.rowDivider = v.findViewById(R.id.row_divider);
             v.setTag(vh);
             return v;
@@ -398,7 +399,7 @@ public class NotificationBinStored extends PinnedHeaderListFragment
         ApplicationInfo appIn = mPM.getApplicationInfo("row.pkg",0); 
         row.icon = mPM.getApplicationIcon(appIn);
 
-    }catch(NameNotFoundException e){
+        }catch(NameNotFoundException e){
         Log.d("YAAP","Application name not found in APPINFO");
         e.printStackTrace();
     }
