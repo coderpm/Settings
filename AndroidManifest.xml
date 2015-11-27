@@ -1429,8 +1429,7 @@
         <receiver
                 android:name=".notification.NotificationBinStored$SbnRecevier">
             <intent-filter>
-                <action android:name="com.android.systemui.addHN" />
-                <action android:name="com.android.systemui.removeHN"/>
+                <action android:name="com.android.systemui.updateMap" />
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </receiver>

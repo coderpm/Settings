@@ -52,10 +52,7 @@ import com.android.settings.UserSpinnerAdapter;
 import com.android.settings.Utils;
 
 import java.text.Collator;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 
 
 import android.content.HiddenNotificationData;
@@ -91,8 +88,7 @@ public class NotificationBinStored extends PinnedHeaderListFragment
     private UserManager mUM;
     private LauncherApps mLauncherApps;
 
-
-    private HiddenNotificationData hiddenNotificationObj;
+    private static ArrayMap<String,StatusBarNotification> mAllNotifications = new ArrayMap<>();
     private ArrayMap<String,AppRow> mStick = new ArrayMap<String,AppRow>();
      
     private NotificationBinAdapter mAdapter;
@@ -108,10 +104,9 @@ public class NotificationBinStored extends PinnedHeaderListFragment
         mLauncherApps = (LauncherApps) mContext.getSystemService(Context.LAUNCHER_APPS_SERVICE);
 
 
-        hiddenNotificationObj = HiddenNotificationData.getSharedInstance();
 
         getActivity().setTitle(R.string.notificationbin_stored_title);
-         Log.d("YAAP", "Inside onCreate of NotificationBinStored");
+        Log.d("YAAP", "Inside onCreate of NotificationBinStored");
              
     }
 
@@ -124,14 +119,14 @@ public class NotificationBinStored extends PinnedHeaderListFragment
             String action = intent.getAction();
             Log.d("YAAP","SBN Receiver "+ action);
 
-            HiddenNotificationData hiddenNotificationData = HiddenNotificationData.getSharedInstance();
-
-            if (action.equals("com.android.systemui.addHN")){
-                StatusBarNotification sbn = intent.getParcelableExtra("com.android.systemui.sbn");
-                hiddenNotificationData.add(sbn.getKey(),sbn,sbn);
-            }else if(action.equals("com.android.systemui.removeHN")){
-                String key = intent.getStringExtra("com.android.systemui.hnkey");
-                hiddenNotificationData.remove(key);
+            if (action.equals("com.android.systemui.updateMap")){
+                Bundle sbnBundle = intent.getBundleExtra("com.android.systemui.sbnMap");
+                ArrayMap<String, StatusBarNotification> arrayMap = new ArrayMap<>();
+                for (String sbnKey : sbnBundle.keySet()){
+                    StatusBarNotification sbn  = (StatusBarNotification) sbnBundle.get(sbnKey);
+                    arrayMap.put(sbnKey,sbn);
+                }
+                mAllNotifications = arrayMap;
             }else{
                 Log.e("YAAP","Unknown sbn action intent");
             }
@@ -309,6 +304,7 @@ public class NotificationBinStored extends PinnedHeaderListFragment
             vh.row.setLayoutTransition(new LayoutTransition());
             vh.title = (TextView) v.findViewById(android.R.id.title);
             vh.subtitle = (TextView) v.findViewById(android.R.id.text1);
+            vh.icon = (ImageView)v.findViewById(android.R.id.icon);
             vh.removeNotificationButton = (Button) v.findViewById(R.id.button_send);
             vh.rowDivider = v.findViewById(R.id.row_divider);
             v.setTag(vh);
@@ -367,6 +363,8 @@ public class NotificationBinStored extends PinnedHeaderListFragment
 
             enableLayoutTransitions(vh.row, animate);
             vh.title.setText(row.pkg);
+            Log.d("YAAP","Bind view Row "+row.icon);
+
             vh.icon.setImageDrawable(row.icon);
             final String sub = getSubtitle(row);
             vh.subtitle.setText(sub);
@@ -396,14 +394,19 @@ public class NotificationBinStored extends PinnedHeaderListFragment
         row.postTime = statusBarObj.getPostTime();
 
         try{
-        ApplicationInfo appIn = mPM.getApplicationInfo("row.pkg",0); 
-        row.icon = mPM.getApplicationIcon(appIn);
+            ApplicationInfo appIn = mPM.getApplicationInfo(row.pkg,0);
+            row.icon = mPM.getApplicationIcon(appIn);
 
         }catch(NameNotFoundException e){
-        Log.d("YAAP","Application name not found in APPINFO");
-        e.printStackTrace();
-    }
+            Log.d("YAAP","Application name not found in APPINFO");
+            e.printStackTrace();
+        }
 
+        Log.d("YAAP","Setting row.icon "+row.icon);
+        if(row.icon == null){
+            row.icon = mPM.getDefaultActivityIcon();
+        }
+        Log.d("YAAP","Setting row.icon "+row.icon);
 
         return row;
     }
@@ -416,8 +419,8 @@ public class NotificationBinStored extends PinnedHeaderListFragment
                 if (DEBUG) Log.d(TAG, "Collecting notifications...");
                 mRows.clear();
                 mSortedRows.clear();
-                ArrayMap<String,StatusBarNotification> mAllNotifications = new ArrayMap<String,StatusBarNotification>();
-                mAllNotifications = hiddenNotificationObj.getDisplayMap(mContext);
+//                ArrayMap<String,StatusBarNotification> mAllNotifications = new ArrayMap<String,StatusBarNotification>();
+//                mAllNotifications = hiddenNotificationObj.getDisplayMap(mContext);
                 Log.d("YAAP", "SIze of mAllNotifications ArrayMap is"+Integer.toString(mAllNotifications.size()));
 
                 //Collect all stored sticky notifications from map
