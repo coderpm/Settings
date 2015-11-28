@@ -1427,9 +1427,9 @@
         </receiver>
 
         <receiver
-                android:name=".notification.NotificationBinStored$SbnRecevier">
+                android:name=".notification.NotificationBinStored$SbnRecevierStat">
             <intent-filter>
-                <action android:name="com.android.systemui.updateMap" />
+                <action android:name="com.android.systemui.updateMapStat" />
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </receiver>

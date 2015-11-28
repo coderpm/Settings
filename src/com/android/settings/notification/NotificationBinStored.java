@@ -7,9 +7,7 @@ import android.animation.LayoutTransition;
 import android.app.INotificationManager;
 import android.app.Notification;
 import android.app.NotificationManager;
-import android.content.BroadcastReceiver;
-import android.content.Context;
-import android.content.Intent;
+import android.content.*;
 import android.content.pm.ActivityInfo;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.LauncherActivityInfo;
@@ -55,7 +53,6 @@ import java.text.Collator;
 import java.util.*;
 
 
-import android.content.HiddenNotificationData;
 import android.service.notification.StatusBarNotification;
 
 
@@ -105,12 +102,39 @@ public class NotificationBinStored extends PinnedHeaderListFragment
 
 
 
+        SbnRecevier sbnRecevier = new SbnRecevier();
+        IntentFilter inF = new IntentFilter();
+        inF.addAction("com.android.systemui.updateMap");
+        mContext.registerReceiver(sbnRecevier,inF);
+
         getActivity().setTitle(R.string.notificationbin_stored_title);
+
+        Intent publishMapIn = new Intent();
+        publishMapIn.setAction("com.android.settings.publishSbn");
+        mContext.sendBroadcast(publishMapIn);
+
         Log.d("YAAP", "Inside onCreate of NotificationBinStored");
              
     }
 
-    public static  class SbnRecevier extends BroadcastReceiver{
+    public static  class SbnRecevierStat extends BroadcastReceiver{
+
+        @Override
+        public void onReceive(Context context, Intent intent) {
+
+
+            String action = intent.getAction();
+            Log.d("YAAP","SBN Receiver "+ action);
+
+            if (action.equals("com.android.systemui.updateMapStat")){
+                updateArrayMap(intent);
+            }else{
+                Log.e("YAAP","Unknown sbn action intent");
+            }
+        }
+    }
+
+    public  class SbnRecevier extends BroadcastReceiver{
 
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -120,17 +144,22 @@ public class NotificationBinStored extends PinnedHeaderListFragment
             Log.d("YAAP","SBN Receiver "+ action);
 
             if (action.equals("com.android.systemui.updateMap")){
-                Bundle sbnBundle = intent.getBundleExtra("com.android.systemui.sbnMap");
-                ArrayMap<String, StatusBarNotification> arrayMap = new ArrayMap<>();
-                for (String sbnKey : sbnBundle.keySet()){
-                    StatusBarNotification sbn  = (StatusBarNotification) sbnBundle.get(sbnKey);
-                    arrayMap.put(sbnKey,sbn);
-                }
-                mAllNotifications = arrayMap;
+                updateArrayMap(intent);
+                loadAppsList();
             }else{
                 Log.e("YAAP","Unknown sbn action intent");
             }
         }
+    }
+
+    private static void updateArrayMap(Intent intent) {
+        Bundle sbnBundle = intent.getBundleExtra("com.android.systemui.sbnMap");
+        ArrayMap<String, StatusBarNotification> arrayMap = new ArrayMap<>();
+        for (String sbnKey : sbnBundle.keySet()){
+            StatusBarNotification sbn  = (StatusBarNotification) sbnBundle.get(sbnKey);
+            arrayMap.put(sbnKey,sbn);
+        }
+        mAllNotifications = arrayMap;
     }
 
 
@@ -199,7 +228,7 @@ public class NotificationBinStored extends PinnedHeaderListFragment
     public void onNothingSelected(AdapterView<?> parent) {
     }
 
-    private void loadAppsList() {
+    public void loadAppsList() {
         Log.d("YAAP","in FUnction loadAppsList");
         AsyncTask.execute(mCollectAppsRunnable);
     }
@@ -248,6 +277,7 @@ public class NotificationBinStored extends PinnedHeaderListFragment
         public Notification notification;
         public UserHandle user;
         public long postTime;
+        public String key;
 
         public Drawable icon;
         public Intent settingsIntent;
@@ -352,10 +382,16 @@ public class NotificationBinStored extends PinnedHeaderListFragment
                 public void onClick(View v) {
                     //TODO: FIrst remove this code and write new                     
                     //Remove the notification and do the broadcast event thing
-                    mContext.startActivity(new Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS)
-                            .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
-                            .putExtra(Settings.EXTRA_APP_PACKAGE, row.pkg)
-                            .putExtra(Settings.EXTRA_APP_UID, row.uid));
+//                    mContext.startActivity(new Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS)
+//                            .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+//                            .putExtra(Settings.EXTRA_APP_PACKAGE, row.pkg)
+//                            .putExtra(Settings.EXTRA_APP_UID, row.uid));
+                    Intent removeIn = new Intent();
+                    removeIn.setAction("com.android.settings.unhideNotif");
+                    removeIn.putExtra("com.android.settings.sbnKey",row.key);
+                    mContext.sendBroadcast(removeIn);
+                    mAllNotifications.remove(row.key);
+                    loadAppsList();
                 }
             });  /** End of onClick button listener  **/
 
@@ -392,6 +428,7 @@ public class NotificationBinStored extends PinnedHeaderListFragment
         row.initialPid = statusBarObj.getInitialPid();
         row.notification = statusBarObj.getNotification();
         row.postTime = statusBarObj.getPostTime();
+        row.key = statusBarObj.getKey();
 
         try{
             ApplicationInfo appIn = mPM.getApplicationInfo(row.pkg,0);
