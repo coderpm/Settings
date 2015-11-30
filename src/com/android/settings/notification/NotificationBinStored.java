@@ -7,6 +7,7 @@ import android.animation.LayoutTransition;
 import android.app.INotificationManager;
 import android.app.Notification;
 import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.content.*;
 import android.content.pm.ActivityInfo;
 import android.content.pm.ApplicationInfo;
@@ -405,7 +406,7 @@ public class NotificationBinStored extends PinnedHeaderListFragment
 
         private String getSubtitle(AppRow row) {
             CharSequence tickerText = row.tickerText;
-            String ticker = CharSequence.toString(tickerText);
+            String ticker = tickerText.toString();
             return ticker;
         }
 
@@ -426,8 +427,8 @@ public class NotificationBinStored extends PinnedHeaderListFragment
         row.postTime = statusBarObj.getPostTime();
         row.key = statusBarObj.getKey();
 
-        row.tickerText = statusBarObj.notification.tickerText;
-        row.contentIntent = statusBarObj.notification.contentIntent;
+        row.tickerText = statusBarObj.getNotification().tickerText;
+        row.contentIntent = statusBarObj.getNotification().contentIntent;
 
         try{
             ApplicationInfo appIn = mPM.getApplicationInfo(row.pkg,0);
