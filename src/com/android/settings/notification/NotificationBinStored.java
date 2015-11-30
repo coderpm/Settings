@@ -280,7 +280,9 @@ public class NotificationBinStored extends PinnedHeaderListFragment
         public String key;
 
         public Drawable icon;
-        public Intent settingsIntent;
+        public PendingIntent contentIntent;
+        public CharSequence tickerText;
+
 
     }
 
@@ -367,10 +369,11 @@ public class NotificationBinStored extends PinnedHeaderListFragment
             vh.row.setOnClickListener(new OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    mContext.startActivity(new Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS)
-                            .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
-                            .putExtra(Settings.EXTRA_APP_PACKAGE, row.pkg)
-                            .putExtra(Settings.EXTRA_APP_UID, row.uid));
+                    mContext.startActivity(row.contentIntent);                    
+//                    mContext.startActivity(new Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS)
+//                            .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+//                           .putExtra(Settings.EXTRA_APP_PACKAGE, row.pkg)
+//                            .putExtra(Settings.EXTRA_APP_UID, row.uid));
 //                            .putExtra(EXTRA_HAS_SETTINGS_INTENT, row.settingsIntent != null)
   //                          .putExtra(EXTRA_SETTINGS_INTENT, row.settingsIntent));
                 }
@@ -380,12 +383,6 @@ public class NotificationBinStored extends PinnedHeaderListFragment
             vh.removeNotificationButton.setOnClickListener(new OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    //TODO: FIrst remove this code and write new                     
-                    //Remove the notification and do the broadcast event thing
-//                    mContext.startActivity(new Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS)
-//                            .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
-//                            .putExtra(Settings.EXTRA_APP_PACKAGE, row.pkg)
-//                            .putExtra(Settings.EXTRA_APP_UID, row.uid));
                     Intent removeIn = new Intent();
                     removeIn.setAction("com.android.settings.unhideNotif");
                     removeIn.putExtra("com.android.settings.sbnKey",row.key);
@@ -396,7 +393,6 @@ public class NotificationBinStored extends PinnedHeaderListFragment
             });  /** End of onClick button listener  **/
 
             
-
             enableLayoutTransitions(vh.row, animate);
             vh.title.setText(row.pkg);
             Log.d("YAAP","Bind view Row "+row.icon);
@@ -408,9 +404,9 @@ public class NotificationBinStored extends PinnedHeaderListFragment
         }
 
         private String getSubtitle(AppRow row) {
-            int userid = row.uid;
-            String subTitle = Integer.toString(userid);
-            return subTitle;
+            CharSequence tickerText = row.tickerText;
+            String ticker = CharSequence.toString(tickerText);
+            return ticker;
         }
 
 
@@ -430,6 +426,9 @@ public class NotificationBinStored extends PinnedHeaderListFragment
         row.postTime = statusBarObj.getPostTime();
         row.key = statusBarObj.getKey();
 
+        row.tickerText = statusBarObj.notification.tickerText;
+        row.contentIntent = statusBarObj.notification.contentIntent;
+
         try{
             ApplicationInfo appIn = mPM.getApplicationInfo(row.pkg,0);
             row.icon = mPM.getApplicationIcon(appIn);
@@ -438,13 +437,11 @@ public class NotificationBinStored extends PinnedHeaderListFragment
             Log.d("YAAP","Application name not found in APPINFO");
             e.printStackTrace();
         }
-
-        Log.d("YAAP","Setting row.icon "+row.icon);
         if(row.icon == null){
+            Log.d("YAAP","Setting row.icon "+row.icon);
             row.icon = mPM.getDefaultActivityIcon();
         }
-        Log.d("YAAP","Setting row.icon "+row.icon);
-
+    
         return row;
     }
 
