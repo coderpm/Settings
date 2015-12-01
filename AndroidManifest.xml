@@ -1426,14 +1426,6 @@
             </intent-filter>
         </receiver>
 
-        <receiver
-                android:name=".notification.NotificationBinStored$SbnRecevierStat">
-            <intent-filter>
-                <action android:name="com.android.systemui.updateMapStat" />
-                <category android:name="android.intent.category.DEFAULT" />
-            </intent-filter>
-        </receiver>
-
 
         <service android:name=".bluetooth.DockService" />
 

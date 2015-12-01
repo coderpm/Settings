@@ -117,22 +117,6 @@ public class NotificationBinStored extends PinnedHeaderListFragment
              
     }
 
-    public static  class SbnRecevierStat extends BroadcastReceiver{
-
-        @Override
-        public void onReceive(Context context, Intent intent) {
-
-
-            String action = intent.getAction();
-            Log.d("YAAP","SBN Receiver "+ action);
-
-            if (action.equals("com.android.systemui.updateMapStat")){
-                updateArrayMap(intent);
-            }else{
-                Log.e("YAAP","Unknown sbn action intent");
-            }
-        }
-    }
 
     public  class SbnRecevier extends BroadcastReceiver{
 
