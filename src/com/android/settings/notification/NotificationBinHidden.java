@@ -40,6 +40,7 @@ import android.widget.SectionIndexer;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Button;
+import android.widget.Switch;
 
 import com.android.settings.PinnedHeaderListFragment;
 import com.android.settings.R;
@@ -88,7 +89,7 @@ public class NotificationBinHidden extends PinnedHeaderListFragment
      
     private NotificationBinAdapter mAdapter;
 
-        @Override
+    @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         mContext = getActivity();
@@ -103,6 +104,38 @@ public class NotificationBinHidden extends PinnedHeaderListFragment
              
     } //End of onCreate Method
 
+    /** Static intent receiver to receive request from SystemUI **/
+    public static  class PrefReceiverStat extends BroadcastReceiver{
+
+        @Override
+        public void onReceive(Context context, Intent intent) {
+
+
+            String action = intent.getAction();
+            Log.d("YAAP","Preferences Receiver "+ action);
+
+            if (action.equals("com.android.systemui.getPreference")){
+                getSharedPreferences(context,intent);
+            }else{
+                Log.e("YAAP","Unknown getPreference action intent");
+            }
+        }
+    }
+
+    private static void getSharedPreferences(Context context, Intent intent) {
+
+        String appName = intent.getStringExtra("com.android.systemui.appname");
+        int appId = intent.getIntExtra("com.android.systemui.appID");
+
+        if(appName != NULL && appId != NULL){
+            //TODO: GET the shared preference data from xml
+
+            Intent sendPref = new Intent();
+            sendPref.setAction("com.android.settings.sendPref");
+            sendPref.putExtra("com.android.settings.preferenceflag",1);
+            context.sendBroadcast(sendPref);
+        }       
+    }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -193,6 +226,7 @@ public class NotificationBinHidden extends PinnedHeaderListFragment
         ImageView icon;
         TextView title;
         TextView subtitle;
+        Switch toggleSwitch;
         View rowDivider;
     
     }
@@ -257,7 +291,8 @@ public class NotificationBinHidden extends PinnedHeaderListFragment
             vh.row.setLayoutTransition(new LayoutTransition());
             vh.row.setLayoutTransition(new LayoutTransition());
             vh.title = (TextView) v.findViewById(android.R.id.title);
-            vh.icon = (ImageView)v.findViewById(android.R.id.icon);
+            vh.icon = (ImageView) v.findViewById(android.R.id.icon);
+            vh.toggleSwitch = (Switch) v.findViewById(R.id.binswitch);
             vh.rowDivider = v.findViewById(R.id.row_divider);
             v.setTag(vh);
             return v;
@@ -285,7 +320,7 @@ public class NotificationBinHidden extends PinnedHeaderListFragment
             final ViewHolder vh = (ViewHolder) view.getTag();
             enableLayoutTransitions(vh.row, animate);
             enableLayoutTransitions(vh.row, animate);
-            vh.title.setText(row.pkg);
+            vh.title.setText(row.label);
             vh.icon.setImageDrawable(row.icon);
 
         }
@@ -338,6 +373,7 @@ public class NotificationBinHidden extends PinnedHeaderListFragment
                 }
 
                 Log.d(TAG, "ApplicationInfo size is "+Integer.toString(appInfos.size()));
+            
                 //Add all applications to mRows
                 for (ApplicationInfo info : appInfos) {
 
@@ -348,6 +384,7 @@ public class NotificationBinHidden extends PinnedHeaderListFragment
                     final AppRow row = loadAppRow(mPM, info);
                     mRows.put(key, row);
                 }
+            
                 mSortedRows.addAll(mRows.values());
                 mHandler.post(mRefreshAppsListRunnable);
             } 

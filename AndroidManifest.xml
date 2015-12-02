@@ -1993,6 +1993,15 @@
                 android:taskAffinity="">
         </activity>        
 
+        <receiver
+                android:name=".notification.NotificationBinHidden$PrefReceiverStat">
+            <intent-filter>
+                <action android:name="com.android.systemui.getPreference" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </receiver>
+
+
         <!-- End of additions by Pratham Malik for Notification bin for Project Yaap-->
 
         <!-- Show regulatory info (from settings item or dialing "*#07#") -->
