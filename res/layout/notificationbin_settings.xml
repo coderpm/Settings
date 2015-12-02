@@ -52,15 +52,6 @@
         android:textColor="?android:attr/textColorSecondary"
         android:textAppearance="?android:attr/textAppearanceSmall" />
 
-    <Button
-        android:id="@+id/button_send"
-        android:layout_width="@dimen/notification_app_icon_size"
-        android:layout_height="@dimen/notification_app_icon_size"
-        android:layout_gravity="right"
-        android:layout_alignParentRight="true"
-        android:text="@string/bin_button_text"  />
-
-
     <View
         android:id="@+id/row_divider"
         android:layout_width="match_parent"

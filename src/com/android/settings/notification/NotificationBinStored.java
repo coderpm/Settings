@@ -354,7 +354,11 @@ public class NotificationBinStored extends PinnedHeaderListFragment
             vh.row.setOnClickListener(new OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    mContext.startActivity(row.contentIntent);                    
+                    Intent pendIntent = new Intent();
+                //TODO: Write code to include row.contentIntent into pendIntent
+                //pendIntent.getActivity(row.contentIntent)
+
+                    mContext.startActivity(pendIntent);                    
 //                    mContext.startActivity(new Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS)
 //                            .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
 //                           .putExtra(Settings.EXTRA_APP_PACKAGE, row.pkg)
