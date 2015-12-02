@@ -16,49 +16,65 @@
 
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:background="?android:attr/listChoiceBackgroundIndicator"
-    android:paddingStart="?android:attr/listPreferredItemPaddingStart"
-    android:paddingEnd="?android:attr/listPreferredItemPaddingEnd">
+    android:layout_height="80dp"
+    android:background="?android:attr/listChoiceBackgroundIndicator">
+    <!--android:paddingStart="?android:attr/listPreferredItemPaddingStart"-->
+    <!--android:paddingEnd="?android:attr/listPreferredItemPaddingEnd">-->
 
-    <ImageView
-        android:id="@android:id/icon"
-        android:layout_width="@dimen/notification_app_icon_size"
-        android:layout_height="@dimen/notification_app_icon_size"
-        android:layout_centerVertical="true"
-        android:contentDescription="@null"
-        android:padding="8dp" />
+    <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent">
 
-    <TextView
-        android:id="@android:id/title"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_centerVertical="true"
-        android:layout_toEndOf="@android:id/icon"
-        android:ellipsize="end"
-        android:singleLine="true"
-        android:textAlignment="viewStart"
-        android:textAppearance="?android:attr/textAppearanceMedium" />
+        <ImageView
+                android:id="@android:id/icon"
+                android:layout_width="0dp"
+                android:layout_height="@dimen/notification_app_icon_size"
+                android:layout_centerVertical="true"
+                android:contentDescription="@null"
+                android:layout_weight="0.2"
+                android:padding="8dp" />
 
-    <TextView
-        android:id="@android:id/text1"
-        android:layout_width="match_parent"
-        android:layout_height="@dimen/notification_app_icon_size"
-        android:layout_toEndOf="@android:id/icon"
-        android:gravity="bottom"
-        android:ellipsize="end"
-        android:singleLine="true"
-        android:textAlignment="viewStart"
-        android:textColor="?android:attr/textColorSecondary"
-        android:textAppearance="?android:attr/textAppearanceSmall" />
+        <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="0.58">
+            <TextView
+                    android:id="@android:id/title"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:singleLine="false"
+                    android:textAlignment="viewStart"
+                    android:paddingTop="10dp"
+                    android:textAppearance="?android:attr/textAppearanceListItem"/>
 
-    <Button
-        android:id="@+id/button_send"
-        android:layout_width="@dimen/notification_app_icon_size"
-        android:layout_height="@dimen/notification_app_icon_size"
-        android:layout_gravity="right"
-        android:layout_alignParentRight="true"
-        android:text="@string/bin_button_text"  />
+            <TextView
+                    android:id="@android:id/text1"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@android:id/title"
+                    android:gravity="bottom"
+                    android:singleLine="false"
+                    android:textAlignment="viewStart"
+                    android:textColor="?android:attr/textColorSecondary"
+                    android:textAppearance="?android:attr/textAppearanceSmall" />
+
+
+        </RelativeLayout>
+
+
+        <Button
+                android:id="@+id/button_send"
+                android:layout_width="0dp"
+                android:layout_height="fill_parent"
+                android:layout_weight="0.22"
+                android:layout_gravity="right"
+                android:layout_alignParentRight="true"
+                android:text="@string/bin_button_text"  />
+
+    </LinearLayout>
+
+
+
 
 
     <View

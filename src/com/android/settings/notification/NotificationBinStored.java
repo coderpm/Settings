@@ -1,60 +1,39 @@
 package com.android.settings.notification;
 
-import static com.android.settings.notification.AppNotificationSettings.EXTRA_HAS_SETTINGS_INTENT;
-import static com.android.settings.notification.AppNotificationSettings.EXTRA_SETTINGS_INTENT;
-
 import android.animation.LayoutTransition;
-import android.app.INotificationManager;
 import android.app.Notification;
-import android.app.NotificationManager;
 import android.app.PendingIntent;
-import android.content.*;
-import android.content.pm.ActivityInfo;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.ApplicationInfo;
-import android.content.pm.LauncherActivityInfo;
 import android.content.pm.LauncherApps;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
-import android.content.pm.ResolveInfo;
 import android.content.pm.Signature;
+import android.content.res.Resources;
+import android.graphics.Bitmap;
+import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
-import android.os.AsyncTask;
-import android.os.Bundle;
-import android.os.Handler;
-import android.os.Parcelable;
-import android.os.ServiceManager;
-import android.os.SystemClock;
-import android.os.UserHandle;
-import android.os.UserManager;
-import android.provider.Settings;
-import android.service.notification.NotificationListenerService;
+import android.os.*;
+import android.service.notification.StatusBarNotification;
 import android.util.ArrayMap;
 import android.util.Log;
 import android.util.TypedValue;
-import android.view.LayoutInflater;
-import android.view.View;
+import android.view.*;
 import android.view.View.OnClickListener;
-import android.view.ViewGroup;
-import android.widget.AdapterView;
+import android.widget.*;
 import android.widget.AdapterView.OnItemSelectedListener;
-import android.widget.ArrayAdapter;
-import android.widget.ImageView;
-import android.widget.SectionIndexer;
-import android.widget.Spinner;
-import android.widget.TextView;
-import android.widget.Button;
-
 import com.android.settings.PinnedHeaderListFragment;
 import com.android.settings.R;
 import com.android.settings.Settings.NotificationAppListActivity;
 import com.android.settings.UserSpinnerAdapter;
 import com.android.settings.Utils;
 
-import java.text.Collator;
-import java.util.*;
-
-
-import android.service.notification.StatusBarNotification;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
 
 
 /** Just a sectioned list of installed applications, nothing else to index **/
@@ -263,10 +242,11 @@ public class NotificationBinStored extends PinnedHeaderListFragment
         public UserHandle user;
         public long postTime;
         public String key;
+        public String title;
+        public String contentText;
 
         public Drawable icon;
         public PendingIntent contentIntent;
-        public CharSequence tickerText;
 
 
     }
@@ -354,17 +334,11 @@ public class NotificationBinStored extends PinnedHeaderListFragment
             vh.row.setOnClickListener(new OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    Intent pendIntent = new Intent();
-                //TODO: Write code to include row.contentIntent into pendIntent
-                //pendIntent.getActivity(row.contentIntent)
-
-                    mContext.startActivity(pendIntent);                    
-//                    mContext.startActivity(new Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS)
-//                            .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
-//                           .putExtra(Settings.EXTRA_APP_PACKAGE, row.pkg)
-//                            .putExtra(Settings.EXTRA_APP_UID, row.uid));
-//                            .putExtra(EXTRA_HAS_SETTINGS_INTENT, row.settingsIntent != null)
-  //                          .putExtra(EXTRA_SETTINGS_INTENT, row.settingsIntent));
+                    try {
+                        row.contentIntent.send(mContext,0,new Intent());
+                    } catch (PendingIntent.CanceledException e) {
+                        e.printStackTrace();
+                    }
                 }
             }); /** End of onClick row listener  **/
 
@@ -383,20 +357,36 @@ public class NotificationBinStored extends PinnedHeaderListFragment
 
             
             enableLayoutTransitions(vh.row, animate);
-            vh.title.setText(row.pkg);
+            String title = row.title == null? row.pkg:row.title;
+            vh.title.setText(title);
             Log.d("YAAP","Bind view Row "+row.icon);
 
+
+            /* RB : gets the small icon. However ugly when small icon not present for notification. */
+//            try {
+//                Resources res = mContext.getPackageManager().getResourcesForApplication(row.pkg);
+////                int smId = row.notification.extras.getInt(Notification.EXTRA_SMALL_ICON);
+//                Drawable dw = res.getDrawable(row.notification.icon);
+//                Log.d("YAAP",dw+" small icon id "+ dw);
+//                if(dw != null){
+//                    row.icon = dw;
+//                }
+//            } catch (NameNotFoundException e) {
+//                e.printStackTrace();
+//            }
+
+
             vh.icon.setImageDrawable(row.icon);
-            final String sub = getSubtitle(row);
+
+
+
+            final String sub = row.contentText;
             vh.subtitle.setText(sub);
             vh.subtitle.setVisibility(!sub.isEmpty() ? View.VISIBLE : View.GONE);
+
+
         }
 
-        private String getSubtitle(AppRow row) {
-            CharSequence tickerText = row.tickerText;
-            String ticker = tickerText.toString();
-            return ticker;
-        }
 
 
     } /** End of NotificationBinAdapter class **/
@@ -414,9 +404,18 @@ public class NotificationBinStored extends PinnedHeaderListFragment
         row.notification = statusBarObj.getNotification();
         row.postTime = statusBarObj.getPostTime();
         row.key = statusBarObj.getKey();
+        CharSequence title = statusBarObj.getNotification().extras.getCharSequence(Notification.EXTRA_TEXT);
+        row.title = title==null?row.pkg:title.toString();
+        CharSequence subText = statusBarObj.getNotification().extras.getString(Notification.EXTRA_SUB_TEXT);
+        if(subText == null){
+            subText = statusBarObj.getNotification().tickerText;
+        }
+        String dateString = new SimpleDateFormat("hh:mm:ss MM/dd/yyyy").format(new Date(row.postTime));
 
-        row.tickerText = statusBarObj.getNotification().tickerText;
+        row.contentText = subText==null?"Posted at "+dateString:subText.toString();
         row.contentIntent = statusBarObj.getNotification().contentIntent;
+
+
 
         try{
             ApplicationInfo appIn = mPM.getApplicationInfo(row.pkg,0);
@@ -491,4 +490,7 @@ public class NotificationBinStored extends PinnedHeaderListFragment
             refreshDisplayedItems();
         }
     };
+
+
+
 }
