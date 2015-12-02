@@ -104,7 +104,7 @@ public class NotificationBinHidden extends PinnedHeaderListFragment
         super.onCreate(savedInstanceState);
         mContext = getActivity();
         mInflater = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-        mAdapter = new NotificationBinAdapter(mCollectAppsRunnableontext);
+        mAdapter = new NotificationBinAdapter(mCollectAppsRunnableContext);
         mUM = UserManager.get(mContext);
         mPM = mContext.getPackageManager();
         mLauncherApps = (LauncherApps) mContext.getSystemService(Context.LAUNCHER_APPS_SERVICE);
@@ -112,7 +112,7 @@ public class NotificationBinHidden extends PinnedHeaderListFragment
         getActivity().setTitle(R.string.notificationbin_settings_title);
 
         //TODO: GET the shared preference data from xml
-        preferenceSetting = getSharedPreferences(settings_FileName,Context.MODE_WORLD_READABLE);
+        preferenceSetting = mContext.getSharedPreferences(settings_FileName,Context.MODE_WORLD_READABLE);
         preferenceSettingEditor = preferenceSetting.edit();
 
         Log.d("YAAP", "Inside onCreate of NotificationBin Settings");
@@ -343,10 +343,9 @@ public class NotificationBinHidden extends PinnedHeaderListFragment
                 if no -- appName not in preference 
                     then add appname in preference file     
 */
-            String checkappName = preferenceSetting.getBoolean(row.pkg+"_normal",null);
-            if(checkappName != null){
+            boolean checkappName = preferenceSetting.getBoolean(row.pkg+"_normal",false);
+            if(preferenceSetting.contains(row.pkg+"_normal")){
                 Log.d("YAAP","Appname: "+row.pkg+" is present");
-
                 if(checkappName == true){
                     //Set default value to it
                     vh.toggleSwitch.setChecked(true);
@@ -360,7 +359,7 @@ public class NotificationBinHidden extends PinnedHeaderListFragment
                 Log.d("YAAP","Appname: "+row.pkg+" is not present");
                 //Appname is not present
                 preferenceSettingEditor.putBoolean(row.pkg+"_normal",true);       
-                prefsPrivateEditor.commit();
+                preferenceSettingEditor.commit();
             }
 
 
@@ -373,10 +372,10 @@ public class NotificationBinHidden extends PinnedHeaderListFragment
                 if(isChecked){
                     Log.d("YAAP","Checked is true");     
                     preferenceSettingEditor.putBoolean(row.pkg+"_normal",true);       
-                    prefsPrivateEditor.commit();
+                    preferenceSettingEditor.commit();
                 }else{
                     preferenceSettingEditor.putBoolean(row.pkg+"_normal",false);       
-                    prefsPrivateEditor.commit();
+                    preferenceSettingEditor.commit();
                     Log.d("YAAP","Checked is false");            
                 }
 
