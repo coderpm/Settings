@@ -38,7 +38,6 @@
                 android:title="@string/notificationbin_Sticky_title"
                 android:fragment="com.android.settings.notification.NotificationBinStored" />
 
-
     </PreferenceCategory>
 
     <!-- End of additions by Pratham Malik for Notification Bin -->

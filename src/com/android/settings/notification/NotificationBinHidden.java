@@ -41,6 +41,8 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Button;
 import android.widget.Switch;
+import android.widget.CompoundButton;
+import android.widget.CompoundButton.OnCheckedChangeListener;
 
 import com.android.settings.PinnedHeaderListFragment;
 import com.android.settings.R;
@@ -53,6 +55,8 @@ import java.util.*;
 
 
 import android.service.notification.StatusBarNotification;
+import android.content.SharedPreferences;
+import android.content.SharedPreferences.Editor;
 
 
 /** Just a sectioned list of installed applications, nothing else to index **/
@@ -88,24 +92,35 @@ public class NotificationBinHidden extends PinnedHeaderListFragment
     private ArrayMap<String,AppRow> mStick = new ArrayMap<String,AppRow>();
      
     private NotificationBinAdapter mAdapter;
+    private SharedPreferences preferenceSetting;
+    private Editor preferenceSettingEditor;
+    String settings_FileName = "notificationbin_settings";
+
+
+
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         mContext = getActivity();
         mInflater = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-        mAdapter = new NotificationBinAdapter(mContext);
+        mAdapter = new NotificationBinAdapter(mCollectAppsRunnableontext);
         mUM = UserManager.get(mContext);
         mPM = mContext.getPackageManager();
         mLauncherApps = (LauncherApps) mContext.getSystemService(Context.LAUNCHER_APPS_SERVICE);
        
         getActivity().setTitle(R.string.notificationbin_settings_title);
+
+        //TODO: GET the shared preference data from xml
+        preferenceSetting = getSharedPreferences(settings_FileName,Context.MODE_WORLD_READABLE);
+        preferenceSettingEditor = preferenceSetting.edit();
+
         Log.d("YAAP", "Inside onCreate of NotificationBin Settings");
              
     } //End of onCreate Method
 
     /** Static intent receiver to receive request from SystemUI **/
-    public static  class PrefReceiverStat extends BroadcastReceiver{
+/*    public static  class PrefReceiverStat extends BroadcastReceiver{
 
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -115,27 +130,27 @@ public class NotificationBinHidden extends PinnedHeaderListFragment
             Log.d("YAAP","Preferences Receiver "+ action);
 
             if (action.equals("com.android.systemui.getPreference")){
-                getSharedPreferences(context,intent);
+                    getSharedPreferencesData(context,intent);
             }else{
                 Log.e("YAAP","Unknown getPreference action intent");
             }
         }
     }
 
-    private static void getSharedPreferences(Context context, Intent intent) {
+    private static void getSharedPreferencesData(Context context, Intent intent) {
 
         String appName = intent.getStringExtra("com.android.systemui.appname");
 //        int appId = intent.getIntExtra("com.android.systemui.appID");
 
         if(appName != null){
-            //TODO: GET the shared preference data from xml
 
+            //Make a new intent and broadcast it for system ui to catch it
             Intent sendPref = new Intent();
             sendPref.setAction("com.android.settings.sendPref");
             sendPref.putExtra("com.android.settings.preferenceflag",1);
             context.sendBroadcast(sendPref);
         }       
-    }
+    }*/
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -320,11 +335,56 @@ public class NotificationBinHidden extends PinnedHeaderListFragment
             final ViewHolder vh = (ViewHolder) view.getTag();
             enableLayoutTransitions(vh.row, animate);
             enableLayoutTransitions(vh.row, animate);
+            
+/*            //Check if appName is present in pref 
+                if yes then get boolean value
+                    if boolean is yes --> then set default as checked
+                    if boolean is false --> then set default as unchecked
+                if no -- appName not in preference 
+                    then add appname in preference file     
+*/
+            String checkappName = preferenceSetting.getBoolean(row.pkg+"_normal",null);
+            if(checkappName != null){
+                Log.d("YAAP","Appname: "+row.pkg+" is present");
+
+                if(checkappName == true){
+                    //Set default value to it
+                    vh.toggleSwitch.setChecked(true);
+                    Log.d("YAAP","Appname: "+row.pkg+" checked to true");
+                }else if(checkappName == false){
+                    //Set default value to it
+                    vh.toggleSwitch.setChecked(false);
+                    Log.d("YAAP","Appname: "+row.pkg+" checked to false");
+                }
+            }else{
+                Log.d("YAAP","Appname: "+row.pkg+" is not present");
+                //Appname is not present
+                preferenceSettingEditor.putBoolean(row.pkg+"_normal",true);       
+                prefsPrivateEditor.commit();
+            }
+
+
+            //Listener for changed Listener for Switch
+            vh.toggleSwitch.setOnCheckedChangeListener(new OnCheckedChangeListener() {
+
+                @Override
+                public void onCheckedChanged(CompoundButton buttonView,boolean isChecked){
+
+                if(isChecked){
+                    Log.d("YAAP","Checked is true");     
+                    preferenceSettingEditor.putBoolean(row.pkg+"_normal",true);       
+                    prefsPrivateEditor.commit();
+                }else{
+                    preferenceSettingEditor.putBoolean(row.pkg+"_normal",false);       
+                    prefsPrivateEditor.commit();
+                    Log.d("YAAP","Checked is false");            
+                }
+
+               }
+            });            
             vh.title.setText(row.label);
             vh.icon.setImageDrawable(row.icon);
-
         }
-
     } /** End of NotificationBinAdapter class **/
 
     /** Function to load all the application data and put them into Approw object**/
