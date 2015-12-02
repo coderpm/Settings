@@ -118,7 +118,7 @@ public class NotificationBinStored extends PinnedHeaderListFragment
              
     }
 
-    public static  class SbnRecevierStat extends BroadcastReceiver{
+    public static class SbnRecevierStat extends BroadcastReceiver{
 
         @Override
         public void onReceive(Context context, Intent intent) {
