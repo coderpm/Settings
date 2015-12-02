@@ -5849,15 +5849,17 @@
     <!-- [CHAR LIMIT=20] Notification settings: App notifications dialog dismiss button caption -->
     <string name="app_notifications_dialog_done">Done</string>
 
-    <!-- Added by Pratham Malik for Notification Bin -->
+    <!-- Added by Pratham Malik for Notification Bin for Project Yaap-->
 
     <string name="notification_bin_header">Notification Bin</string>
-    <string name="notificationbin_app_title">App sticky notifications</string>
+    <string name="notificationbin_app_title">Sticky notifications Settings</string>
     <string name="notificationbin_Sticky_title">Hidden Sticky Notifications</string>    
     <string name="notificationbin_stored_title">Hidden Stickies</string>
     <string name="loading_notification_stick">No Hidden Sticky Notifications...</string>
     <string name="bin_button_text">Unhide</string>
-    <!-- End of additions by Pratham Malik for Notification Bin -->
+    <string name="notificationbin_settings_title">Setting for Sticky</string>
+
+    <!-- End of additions by Pratham Malik for Notification Bin for Project Yaap-->
 
     <!-- [CHAR LIMIT=30] Zen mode settings: Exit condition selection dialog, default option -->
     <string name="zen_mode_default_option">Until you turn this off</string>

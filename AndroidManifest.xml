@@ -1985,7 +1985,7 @@
                 android:resource="@id/notification_settings" />
         </activity>
 
-        <!-- Added by Pratham Malik for Notification bin -->
+        <!-- Added by Pratham Malik for Notification bin for Project Yaap-->
 
         <!-- Activity being added for displaying the existing applications-->
         <activity android:name="Settings$NotificationBinHiddenActivity"
@@ -1994,7 +1994,6 @@
                 android:taskAffinity="">
         </activity>
 
-
         <!-- Activity being added for building the stored sticky notifications-->
         <activity android:name="Settings$NotificationBinStoredActivity"
                 android:label="@string/notificationbin_app_title"
@@ -2002,7 +2001,7 @@
                 android:taskAffinity="">
         </activity>        
 
-        <!-- End of additions by Pratham Malik for Notification bin -->
+        <!-- End of additions by Pratham Malik for Notification bin for Project Yaap-->
 
         <!-- Show regulatory info (from settings item or dialing "*#07#") -->
         <activity android:name="RegulatoryInfoDisplayActivity"

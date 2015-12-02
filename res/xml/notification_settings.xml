@@ -28,7 +28,7 @@
 
         <!-- App notifications bin settings-->
         <PreferenceScreen
-                android:key="app_notifications_setting"
+                android:key="notificationsbin_settings"
                 android:title="@string/notificationbin_app_title"
                 android:fragment="com.android.settings.notification.NotificationBinHidden" />
 
