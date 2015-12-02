@@ -292,7 +292,7 @@ public class NotificationBinHidden extends PinnedHeaderListFragment
             vh.row.setLayoutTransition(new LayoutTransition());
             vh.title = (TextView) v.findViewById(android.R.id.title);
             vh.icon = (ImageView) v.findViewById(android.R.id.icon);
-            vh.toggleSwitch = (Switch) v.findViewById(android.R.id.binswitch);
+            vh.toggleSwitch = (Switch) v.findViewById(R.id.binswitch);
             vh.rowDivider = v.findViewById(R.id.row_divider);
             v.setTag(vh);
             return v;
@@ -385,7 +385,7 @@ public class NotificationBinHidden extends PinnedHeaderListFragment
                     mRows.put(key, row);
                 }
             
-            3    mSortedRows.addAll(mRows.values());
+                mSortedRows.addAll(mRows.values());
                 mHandler.post(mRefreshAppsListRunnable);
             } 
         }/** End of run method **/
