@@ -125,9 +125,9 @@ public class NotificationBinHidden extends PinnedHeaderListFragment
     private static void getSharedPreferences(Context context, Intent intent) {
 
         String appName = intent.getStringExtra("com.android.systemui.appname");
-        int appId = intent.getIntExtra("com.android.systemui.appID");
+//        int appId = intent.getIntExtra("com.android.systemui.appID");
 
-        if(appName != NULL && appId != NULL){
+        if(appName != null){
             //TODO: GET the shared preference data from xml
 
             Intent sendPref = new Intent();
