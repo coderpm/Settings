@@ -25,10 +25,9 @@
         android:id="@android:id/title"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_centerVertical="true"
-        android:layout_toEndOf="@android:id/icon"
+        android:paddingTop="10dp"
         android:ellipsize="end"
-        android:singleLine="true"
+        android:singleLine="false"
         android:textAlignment="viewStart"
         android:textAppearance="?android:attr/textAppearanceMedium" />
 
@@ -36,10 +35,10 @@
         android:id="@android:id/text1"
         android:layout_width="match_parent"
         android:layout_height="@dimen/notification_app_icon_size"
-        android:layout_toEndOf="@android:id/icon"
+        android:layout_below="@android:id/title"
         android:gravity="bottom"
         android:ellipsize="end"
-        android:singleLine="true"
+        android:singleLine="false"
         android:textAlignment="viewStart"
         android:textColor="?android:attr/textColorSecondary"
         android:textAppearance="?android:attr/textAppearanceSmall" />

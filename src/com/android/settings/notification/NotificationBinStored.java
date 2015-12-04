@@ -8,21 +8,18 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.ApplicationInfo;
-import android.content.pm.LauncherApps;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
-import android.content.pm.Signature;
-import android.content.res.Resources;
-import android.graphics.Bitmap;
-import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.*;
 import android.service.notification.StatusBarNotification;
 import android.util.ArrayMap;
 import android.util.Log;
 import android.util.TypedValue;
-import android.view.*;
+import android.view.LayoutInflater;
+import android.view.View;
 import android.view.View.OnClickListener;
+import android.view.ViewGroup;
 import android.widget.*;
 import android.widget.AdapterView.OnItemSelectedListener;
 import com.android.settings.PinnedHeaderListFragment;
@@ -42,25 +39,18 @@ public class NotificationBinStored extends PinnedHeaderListFragment
     private static final String TAG = "NotificationAppList";
     private static final boolean DEBUG = Log.isLoggable(TAG, Log.DEBUG);
 
-    private static final String EMPTY_SUBTITLE = "";
     private static final String SECTION_BEFORE_A = "*";
     private static final String SECTION_AFTER_Z = "**";
-    private static final Intent APP_NOTIFICATION_PREFS_CATEGORY_INTENT
-            = new Intent(Intent.ACTION_MAIN)
-                .addCategory(Notification.INTENT_CATEGORY_NOTIFICATION_PREFERENCES);
 
     private final Handler mHandler = new Handler();
-    private final ArrayMap<String, AppRow> mRows = new ArrayMap<String, AppRow>();
-    private final ArrayList<AppRow> mSortedRows = new ArrayList<AppRow>();
-    private final ArrayList<String> mSections = new ArrayList<String>();
+    private final ArrayMap<String, AppRow> mRows = new ArrayMap<>();
+    private final ArrayList<AppRow> mSortedRows = new ArrayList<>();
 
     private Context mContext;
     private LayoutInflater mInflater;
-    private Signature[] mSystemSignature;
     private Parcelable mListViewState;
     private UserSpinnerAdapter mProfileSpinnerAdapter;
     private Spinner mSpinner;
-    private ArrayMap<String,Drawable> mIconMap = new ArrayMap<>();
 
     private static PackageManager mPM;
     private UserManager mUM;
@@ -195,14 +185,6 @@ public class NotificationBinStored extends PinnedHeaderListFragment
         AsyncTask.execute(mCollectAppsRunnable);
     }
 
-    private String getSection(CharSequence label) {
-        if (label == null || label.length() == 0) return SECTION_BEFORE_A;
-        final char c = Character.toUpperCase(label.charAt(0));
-        if (c < 'A') return SECTION_BEFORE_A;
-        if (c > 'Z') return SECTION_AFTER_Z;
-        return Character.toString(c);
-    }
-
     private void repositionScrollbar() {
         final int sbWidthPx = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP,
                 getListView().getScrollBarSize(),
@@ -234,7 +216,6 @@ public class NotificationBinStored extends PinnedHeaderListFragment
         public String tag;
       
         public int uid;
-        public String opPkg;
         public int initialPid;
         public Notification notification;
         public UserHandle user;
@@ -406,7 +387,6 @@ public class NotificationBinStored extends PinnedHeaderListFragment
         row.id = statusBarObj.getId();
         row.tag = statusBarObj.getTag();
         row.uid = statusBarObj.getUid();
-        row.opPkg = statusBarObj.getOpPkg();
         row.initialPid = statusBarObj.getInitialPid();
         row.notification = statusBarObj.getNotification();
         row.postTime = statusBarObj.getPostTime();
@@ -422,8 +402,6 @@ public class NotificationBinStored extends PinnedHeaderListFragment
 
         row.contentText = subText==null?"Posted at "+dateString:subText.toString();
         row.contentIntent = statusBarObj.getNotification().contentIntent;
-
-        row.icon = mIconMap.get(statusBarObj.getKey());
 
         if(row.icon == null){
             try{
@@ -457,7 +435,7 @@ public class NotificationBinStored extends PinnedHeaderListFragment
                 Log.d("YAAP", "SIze of mAllNotifications ArrayMap is"+Integer.toString(mAllNotifications.size()));
 
                 //Collect all stored sticky notifications from map
-                ArrayList<StatusBarNotification> mNotifications = new ArrayList<StatusBarNotification>();
+                ArrayList<StatusBarNotification> mNotifications = new ArrayList<>();
                 mNotifications.addAll(mAllNotifications.values());
                 Log.d("YAAP", "SIze of mNotifications ArrayList is"+Integer.toString(mNotifications.size()));
    
@@ -480,11 +458,8 @@ public class NotificationBinStored extends PinnedHeaderListFragment
         if (DEBUG) Log.d(TAG, "Refreshing notifications...");
         mAdapter.clear();
         synchronized (mSortedRows) {
-            String section = null;
-            final int N = mSortedRows.size();
-            boolean first = true;
-            for (int i = 0; i < N; i++) {
-                final AppRow row = mSortedRows.get(i);
+            for (int i=0;i<mSortedRows.size();i++) {
+                AppRow row = mSortedRows.get(i);
                 mAdapter.add(row);
             }
         }

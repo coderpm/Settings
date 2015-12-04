@@ -1,30 +1,17 @@
 package com.android.settings.notification;
 
 import android.animation.LayoutTransition;
-import android.app.INotificationManager;
-import android.app.Notification;
-import android.app.NotificationManager;
-import android.app.PendingIntent;
-import android.content.*;
-import android.content.pm.ActivityInfo;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.SharedPreferences;
+import android.content.SharedPreferences.Editor;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.LauncherActivityInfo;
 import android.content.pm.LauncherApps;
 import android.content.pm.PackageManager;
-import android.content.pm.PackageManager.NameNotFoundException;
-import android.content.pm.ResolveInfo;
-import android.content.pm.Signature;
 import android.graphics.drawable.Drawable;
-import android.os.AsyncTask;
-import android.os.Bundle;
-import android.os.Handler;
-import android.os.Parcelable;
-import android.os.ServiceManager;
-import android.os.SystemClock;
-import android.os.UserHandle;
-import android.os.UserManager;
-import android.provider.Settings;
-import android.service.notification.NotificationListenerService;
+import android.os.*;
 import android.util.ArrayMap;
 import android.util.Log;
 import android.util.TypedValue;
@@ -33,22 +20,14 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.widget.*;
-import android.widget.AdapterView.OnItemSelectedListener;
-import android.widget.CompoundButton.OnCheckedChangeListener;
-
 import com.android.settings.PinnedHeaderListFragment;
 import com.android.settings.R;
-import com.android.settings.Settings.NotificationAppListActivity;
 import com.android.settings.UserSpinnerAdapter;
 import com.android.settings.Utils;
 
-import java.text.Collator;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
-
-import android.service.notification.StatusBarNotification;
-import android.content.SharedPreferences;
-import android.content.SharedPreferences.Editor;
 
 
 /** Just a sectioned list of installed applications, nothing else to index **/
@@ -57,37 +36,24 @@ public class NotificationBinHidden extends PinnedHeaderListFragment
     private static final String TAG = "YAAP";
     private static final boolean DEBUG = Log.isLoggable(TAG, Log.DEBUG);
 
-    private static final String EMPTY_SUBTITLE = "";
-    private static final String SECTION_BEFORE_A = "*";
-    private static final String SECTION_AFTER_Z = "**";
-    private static final Intent APP_NOTIFICATION_PREFS_CATEGORY_INTENT
-            = new Intent(Intent.ACTION_MAIN)
-                .addCategory(Notification.INTENT_CATEGORY_NOTIFICATION_PREFERENCES);
-
-    private final Handler mHandler = new Handler();
-    private final ArrayMap<String, AppRow> mRows = new ArrayMap<String, AppRow>();
-    private final ArrayList<AppRow> mSortedRows = new ArrayList<AppRow>();
+           private final Handler mHandler = new Handler();
+    private final ArrayMap<String, AppRow> mRows = new ArrayMap<>();
+    private final ArrayList<AppRow> mSortedRows = new ArrayList<>();
     
 
     private Context mContext;
     private LayoutInflater mInflater;
-    private Signature[] mSystemSignature;
     private Parcelable mListViewState;
-    private UserSpinnerAdapter mProfileSpinnerAdapter;
-    private Spinner mSpinner;
 
-    private static PackageManager mPM;
+           private static PackageManager mPM;
     private UserManager mUM;
     private LauncherApps mLauncherApps;
 
-    private static ArrayMap<String,StatusBarNotification> mAllNotifications = new ArrayMap<>();
-    private ArrayMap<String,AppRow> mStick = new ArrayMap<String,AppRow>();
-     
     private NotificationBinAdapter mAdapter;
     private static SharedPreferences preferenceSetting;
     private Editor preferenceSettingEditor;
-    static String settings_FileName = "notificationbin_settings";
-    
+    protected static String settings_FileName = "notificationbin_settings";
+
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -102,7 +68,7 @@ public class NotificationBinHidden extends PinnedHeaderListFragment
         getActivity().setTitle(R.string.notificationbin_settings_title);
 
         //TODO: GET the shared preference data from xml
-        preferenceSetting = mContext.getSharedPreferences(settings_FileName,Context.MODE_WORLD_WRITEABLE);
+        preferenceSetting = mContext.getSharedPreferences(settings_FileName,Context.MODE_PRIVATE);
         preferenceSettingEditor = preferenceSetting.edit();
 
         Log.d("YAAP", "Inside onCreate of NotificationBin Settings");
@@ -121,14 +87,14 @@ public class NotificationBinHidden extends PinnedHeaderListFragment
             Log.d("YAAP","Preferences Receiver "+ action);
 
             if (action.equals("com.android.systemui.getPreference")){
-                    getSharedPreferencesData(context,intent);
+                    getSharedPreferencesData(context);
             }else{
                 Log.e("YAAP","Unknown getPreference action intent");
             }
         }
     }
 
-    private static void getSharedPreferencesData(Context context, Intent intent) {
+    private static void getSharedPreferencesData(Context context) {
 
         //Get the Map from SharedPreferences file
         SharedPreferences sharedPrefs;
@@ -179,9 +145,9 @@ public class NotificationBinHidden extends PinnedHeaderListFragment
     @Override
     public void onViewCreated(View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        mProfileSpinnerAdapter = Utils.createUserSpinnerAdapter(mUM, mContext);
+        UserSpinnerAdapter mProfileSpinnerAdapter = Utils.createUserSpinnerAdapter(mUM, mContext);
         if (mProfileSpinnerAdapter != null) {
-            mSpinner = (Spinner) getActivity().getLayoutInflater().inflate(
+            Spinner mSpinner = (Spinner) getActivity().getLayoutInflater().inflate(
                     R.layout.spinner_view, null);
             mSpinner.setAdapter(mProfileSpinnerAdapter);
 //            mSpinner.setOnItemSelectedListener(this);
@@ -215,27 +181,8 @@ public class NotificationBinHidden extends PinnedHeaderListFragment
         loadAppsList();
     }
 
-//    @Override
-//    public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-//        Log.d("YAAP", "in onItemSelected");
-//        UserHandle selectedUser = mProfileSpinnerAdapter.getUserHandle(position);
-//        if (selectedUser.getIdentifier() != UserHandle.myUserId()) {
-//            Intent intent = new Intent(getActivity(), NotificationAppListActivity.class);
-//            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-//            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
-//            mContext.startActivityAsUser(intent, selectedUser);
-//            // Go back to default selection, which is the first one; this makes sure that pressing
-//            // the back button takes you into a consistent state
-//            mSpinner.setSelection(0);
-//        }
-//    }
-//
-//    @Override
-//    public void onNothingSelected(AdapterView<?> parent) {
-//    }
 
     public void loadAppsList() {
-        Log.d("YAAP","in FUnction loadAppsList");
         AsyncTask.execute(mCollectAppsRunnable);
     }
 
@@ -258,7 +205,6 @@ public class NotificationBinHidden extends PinnedHeaderListFragment
         ViewGroup row;
         ImageView icon;
         TextView title;
-        TextView subtitle;
         CheckBox toggleSwitch;
         View rowDivider;
     
@@ -365,7 +311,6 @@ public class NotificationBinHidden extends PinnedHeaderListFragment
 
             if(preferenceSetting.contains(row.pkg+"_normal")){
                 boolean checkappName = preferenceSetting.getBoolean(row.pkg+"_normal",false);
-                Log.d("YAAP","Appname: "+row.pkg+" is present");
                 if(checkappName ){
                     //Set default value to it
                     vh.toggleSwitch.setChecked(true);
@@ -383,31 +328,15 @@ public class NotificationBinHidden extends PinnedHeaderListFragment
             }
 
 
-            //Listener for changed Listener for Switch
-//            vh.toggleSwitch.setOnCheckedChangeListener(new OnCheckedChangeListener() {
-//                @Override
-//                public void onCheckedChanged(CompoundButton buttonView,boolean isChecked){
-//                    preferenceSettingEditor.putBoolean(row.pkg+"_normal",isChecked);
-//                    Boolean commitResult = preferenceSettingEditor.commit();
-//                    Boolean result = preferenceSetting.getBoolean(row.pkg+"_normal",false);
-//                    Log.d("YAAP","Trying for "+isChecked+", Getting "+result+" "+row.pkg +" "+"and commit "+commitResult);
-//                    notifyDataSetChanged();
-//               }
-//            });
-
             vh.toggleSwitch.setOnClickListener(new OnClickListener() {
                 @Override
                 public void onClick(View view) {
                     CheckBox buttonView = (CheckBox) view;
                     Boolean isChecked = buttonView.isChecked();
                     preferenceSettingEditor.putBoolean(row.pkg+"_normal",isChecked);
-                    Boolean commitResult = preferenceSettingEditor.commit();
-
+                    preferenceSettingEditor.commit();
                     //Send a intent to SystemUI
                     sendSharedPreferencesData();
-
-                    Boolean result = preferenceSetting.getBoolean(row.pkg+"_normal",false);
-                    Log.d("YAAP","Trying for "+isChecked+", Getting "+result+" "+row.pkg +" "+"and commit "+commitResult);
                 }
             });
 
@@ -420,8 +349,7 @@ public class NotificationBinHidden extends PinnedHeaderListFragment
     public static AppRow loadAppRow(PackageManager pm, ApplicationInfo app){
 
         final AppRow row = new AppRow();
-        Log.d("YAAP","Loading ApplicationInfo data in loadAppRow");
-        
+
         row.pkg = app.packageName;
         row.uid = app.uid;
         row.icon = app.loadIcon(pm);
@@ -450,7 +378,7 @@ public class NotificationBinHidden extends PinnedHeaderListFragment
                 mSortedRows.clear();
 
                 // collect all launchable apps, plus any packages that have notification settings
-                final List<ApplicationInfo> appInfos = new ArrayList<ApplicationInfo>();
+                final List<ApplicationInfo> appInfos = new ArrayList<>();
 
                final List<LauncherActivityInfo> lais
                         = mLauncherApps.getActivityList(null /* all */,
@@ -489,9 +417,7 @@ public class NotificationBinHidden extends PinnedHeaderListFragment
         synchronized (mSortedRows) {
       
             final int N = mSortedRows.size();
-            boolean first = true;
-            for (int i = 0; i < N; i++) {
-                final AppRow row = mSortedRows.get(i);
+            for (final AppRow row : mSortedRows) {
                 mAdapter.add(row);
             }
         }
