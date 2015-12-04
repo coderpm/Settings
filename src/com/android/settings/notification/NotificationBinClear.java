@@ -274,7 +274,7 @@ public class NotificationBinClear extends PinnedHeaderListFragment {
 
             AppRow row = new AppRow();
             row.pkg = "Clear All Sticky";
-            row.subText = "Clear all sticky notifications";
+            row.subText = " ";
             row.hasCheckBox = true;
             mSortedRows.add(row);
             mAdapter.add(row);
@@ -286,12 +286,12 @@ public class NotificationBinClear extends PinnedHeaderListFragment {
             mSortedRows.add(row2);
             mAdapter.add(row2);
 
-            AppRow row3 = new AppRow();
+       /*     AppRow row3 = new AppRow();
             row3.pkg = "Help";
             row3.subText = "Add whatever u want";
             row3.hasCheckBox = false;
             mSortedRows.add(row3);
-            mAdapter.add(row3);
+            mAdapter.add(row3);*/
 
         }/** End of run method **/
     };
