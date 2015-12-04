@@ -1993,6 +1993,14 @@
                 android:taskAffinity="">
         </activity>
 
+        <!-- Activity being added for building the stored sticky notifications-->
+        <activity android:name="Settings$NotificationBinClearActivity"
+                android:label="@string/notificationbin_app_title"
+                android:exported="true"
+                android:taskAffinity="">
+        </activity>
+
+
         <receiver
                 android:name=".notification.NotificationBinHidden$PrefReceiverStat">
             <intent-filter>
@@ -2000,6 +2008,7 @@
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </receiver>
+
 
         <!-- End of additions by Pratham Malik for Notification bin for Project Yaap-->
 

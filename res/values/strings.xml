@@ -5858,6 +5858,9 @@
     <string name="loading_notification_stick">No Hidden Sticky Notifications...</string>
     <string name="bin_button_text">Unhide</string>
     <string name="notificationbin_settings_title">Setting for Sticky</string>
+    <string name="notificationbin_clearall">Clear All Stickies</string>
+    <string name="notificationbin_settings_title">Clear All Settings</string>
+    
 
     <!-- End of additions by Pratham Malik for Notification Bin for Project Yaap-->
 
