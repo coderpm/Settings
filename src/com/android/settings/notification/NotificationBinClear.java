@@ -211,7 +211,6 @@ public class NotificationBinClear extends PinnedHeaderListFragment
     }
 
     public void loadAppsList() {
-        Log.d("YAAP","in FUnction loadAppsList");
         AsyncTask.execute(mCollectAppsRunnable);
     }
 
@@ -233,6 +232,7 @@ public class NotificationBinClear extends PinnedHeaderListFragment
     private static class ViewHolder {
         ViewGroup row;
         TextView title;
+        TextView subtitle;
         CheckBox toggleSwitch;
         View rowDivider;
     
@@ -242,6 +242,8 @@ public class NotificationBinClear extends PinnedHeaderListFragment
         
         //Used for AppInfo object         
         public String pkg;
+        public String subText;
+        public Boolean hasCheckBox;
     }
 
         private class NotificationBinAdapter extends ArrayAdapter<AppRow> {
@@ -286,6 +288,7 @@ public class NotificationBinClear extends PinnedHeaderListFragment
             vh.row.setLayoutTransition(new LayoutTransition());
             vh.row.setLayoutTransition(new LayoutTransition());
             vh.title = (TextView) v.findViewById(android.R.id.title);
+            vh.subtitle = (TextView) v.findViewById(android.R.id.text1);
             vh.toggleSwitch = (CheckBox) v.findViewById(R.id.binswitch);
             vh.rowDivider = v.findViewById(R.id.row_divider);
             v.setTag(vh);
@@ -316,6 +319,11 @@ public class NotificationBinClear extends PinnedHeaderListFragment
             enableLayoutTransitions(vh.row, animate);
             
             vh.title.setText(row.pkg);
+            vh.subtitle.setText(subText);
+//            vh.toggleSwitch.setVisibility(!sub.isEmpty() ? View.VISIBLE : View.GONE);
+  
+            vh.toggleSwitch.setVisibility(row.hasCheckBox ? View.VISIBLE : View.GONE);
+  
         }
     } /** End of NotificationBinAdapter class **/
 
@@ -326,12 +334,27 @@ public class NotificationBinClear extends PinnedHeaderListFragment
         public void run() {
 
             mSortedRows.clear();
-            AppRow row = new AppRow();
-            row.pkg = "First";
-
-            mSortedRows.add(row);
-    
             mAdapter.clear();
+            
+            AppRow row = new AppRow();
+            row.pkg = "Clear All Sticky";
+            row.subText= "Clear all sticky notifications";
+            row.hasCheckBox=true;
+            mSortedRows.add(row);
+            mAdapter.add(row);
+
+            AppRow row = new AppRow();
+            row.pkg = "Info";
+            row.subText= "Check this to clear all sticky notifications when clear all button is pressed";
+            row.hasCheckBox=false;
+            mSortedRows.add(row);
+            mAdapter.add(row);
+
+            AppRow row = new AppRow();
+            row.pkg = "Help";
+            row.subText= "Add whatever u want";
+            row.hasCheckBox=false;
+            mSortedRows.add(row);
             mAdapter.add(row);
 
         }/** End of run method **/
