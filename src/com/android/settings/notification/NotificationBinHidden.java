@@ -25,6 +25,7 @@ import com.android.settings.R;
 import com.android.settings.UserSpinnerAdapter;
 import com.android.settings.Utils;
 
+import java.text.Collator;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -403,10 +404,26 @@ public class NotificationBinHidden extends PinnedHeaderListFragment
                 }
             
                 mSortedRows.addAll(mRows.values());
+                Collections.sort(mSortedRows, mRowComparator);
+                //Sort the mSortedRows
+                for (Approw allApplications : mSortedRows) {
+                    System.out.println(name);
+                }
+
+
                 mHandler.post(mRefreshAppsListRunnable);
             } 
         }/** End of run method **/
     };
+
+    private static final Comparator<AppRow> mRowComparator = new Comparator<AppRow>() {
+        private final Collator sCollator = Collator.getInstance();
+        @Override
+        public int compare(AppRow lhs, AppRow rhs) {
+            return sCollator.compare(lhs.label, rhs.label);
+        }
+    };
+
 
     /** Write this function if list is not refreshed **/
     private void refreshDisplayedItems() {

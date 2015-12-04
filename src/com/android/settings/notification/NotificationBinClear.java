@@ -59,7 +59,7 @@ public class NotificationBinClear extends PinnedHeaderListFragment {
         mAdapter = new NotificationBinAdapter(mContext);
         mUM = UserManager.get(mContext);
 
-        getActivity().setTitle(R.string.notificationbin_settings_title);
+        getActivity().setTitle(R.string.notificationbin_clear_settings);
         preferenceSetting = mContext.getSharedPreferences(settings_FileName, Context.MODE_PRIVATE);
         preferenceSettingEditor = preferenceSetting.edit();
 
@@ -87,7 +87,7 @@ public class NotificationBinClear extends PinnedHeaderListFragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.notificationbin_app_list, container, false);
+        return inflater.inflate(R.layout.notificationbin_clear, container, false);
     }
 
     @Override
