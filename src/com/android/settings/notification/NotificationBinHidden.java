@@ -29,7 +29,8 @@ import java.text.Collator;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-
+import java.util.Comparator;
+import java.util.Collections;
 
 /** Just a sectioned list of installed applications, nothing else to index **/
 public class NotificationBinHidden extends PinnedHeaderListFragment
@@ -406,9 +407,9 @@ public class NotificationBinHidden extends PinnedHeaderListFragment
                 mSortedRows.addAll(mRows.values());
                 Collections.sort(mSortedRows, mRowComparator);
                 //Sort the mSortedRows
-                for (Approw allApplications : mSortedRows) {
+                /*for (Approw allApplications : mSortedRows) {
                     System.out.println(name);
-                }
+                }*/
 
 
                 mHandler.post(mRefreshAppsListRunnable);

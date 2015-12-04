@@ -273,7 +273,7 @@ public class NotificationBinClear extends PinnedHeaderListFragment {
             mAdapter.clear();
 
             AppRow row = new AppRow();
-            row.pkg = "Clear All Sticky";
+            row.pkg = "Clear All";
             row.subText = " ";
             row.hasCheckBox = true;
             mSortedRows.add(row);

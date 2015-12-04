@@ -5856,10 +5856,10 @@
     <string name="notificationbin_Sticky_title">Sticky Notification Bin</string>    
     <string name="notificationbin_clearall">Clear All Settings</string>
 
-    <string name="notificationbin_stored_title">Hidden Stickies</string>
+    <string name="notificationbin_stored_title">Hidden Notifications</string>
     <string name="loading_notification_stick">No Hidden Sticky Notifications...</string>
     <string name="bin_button_text">Unhide</string>
-    <string name="notificationbin_settings_title">Setting for Sticky</string>
+    <string name="notificationbin_settings_title">App Sticky Settings</string>
     <string name="notificationbin_clear_settings">Clear All Settings</string>
     
 
