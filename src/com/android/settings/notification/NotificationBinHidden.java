@@ -84,9 +84,9 @@ public class NotificationBinHidden extends PinnedHeaderListFragment
     private ArrayMap<String,AppRow> mStick = new ArrayMap<String,AppRow>();
      
     private NotificationBinAdapter mAdapter;
-    private SharedPreferences preferenceSetting;
+    private static SharedPreferences preferenceSetting;
     private Editor preferenceSettingEditor;
-    String settings_FileName = "notificationbin_settings";
+    static String settings_FileName = "notificationbin_settings";
     
 
     @Override
@@ -131,13 +131,13 @@ public class NotificationBinHidden extends PinnedHeaderListFragment
     private static void getSharedPreferencesData(Context context, Intent intent) {
 
         //Get the Map from SharedPreferences file
-        private SharedPreferences sharedPrefs;
+        SharedPreferences sharedPrefs;
         sharedPrefs = context.getSharedPreferences(settings_FileName,Context.MODE_PRIVATE);
-        Map<String, Boolean> allEntries = sharedPrefs.getAll();
+        Map<String, ?> allEntries = sharedPrefs.getAll();
         Bundle sharedPrefbundle = new Bundle();
 
-        for (Map.Entry<String, Boolean> entry : allEntries.entrySet()) {
-            sharedPrefbundle.putBoolean(entry.getKey(),entry.getValue());
+        for (Map.Entry<String, ?> entry : allEntries.entrySet()) {
+            sharedPrefbundle.putBoolean(entry.getKey(),(Boolean)entry.getValue());
         } 
 
 
@@ -148,21 +148,21 @@ public class NotificationBinHidden extends PinnedHeaderListFragment
         context.sendBroadcast(sendPref);
     }
 
-    private static void sendSharedPreferencesData() {
+    private void sendSharedPreferencesData() {
 
         //Get the Map from SharedPreferences file
-        Map<String, Boolean> allEntries = preferenceSetting.getAll();
+        Map<String, ?> allEntries = preferenceSetting.getAll();
         Bundle sharedPrefbundle = new Bundle();
 
-        for (Map.Entry<String, Boolean> entry : allEntries.entrySet()) {
-            sharedPrefbundle.putBoolean(entry.getKey(),entry.getValue());
+        for (Map.Entry<String, ?> entry : allEntries.entrySet()) {
+            sharedPrefbundle.putBoolean(entry.getKey(),(Boolean)entry.getValue());
         } 
 
         //Make a new intent and broadcast it for system ui to catch it
         Intent sendPref = new Intent();
         sendPref.setAction("com.android.settings.sendPref");
         sendPref.putExtra("com.android.settings.prefBundle",sharedPrefbundle);
-        context.sendBroadcast(sendPref);
+        mContext.sendBroadcast(sendPref);
     }
 
     @Override
