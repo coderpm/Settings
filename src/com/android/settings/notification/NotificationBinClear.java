@@ -305,8 +305,8 @@ public class NotificationBinClear extends PinnedHeaderListFragment
         public void bindView(final View view, AppRow r, boolean animate) {
             if (!(r instanceof AppRow)) {
                 // it's a section row
-                final TextView tv = (TextView)view.findViewById(android.R.id.title);
-                tv.setText(r.pkg);
+//                final TextView tv = (TextView)view.findViewById(android.R.id.title);
+//                tv.setText(r.pkg);
                 return;
             }
 
@@ -326,7 +326,7 @@ public class NotificationBinClear extends PinnedHeaderListFragment
         public void run() {
 
             mSortedRows.clear();
-            Approw row = new Approw();
+            AppRow row = new AppRow();
             row.pkg = "First";
 
             mSortedRows.add(row);

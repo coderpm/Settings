@@ -64,11 +64,9 @@ public class NotificationBinStored extends PinnedHeaderListFragment
 
     private static PackageManager mPM;
     private UserManager mUM;
-    private LauncherApps mLauncherApps;
 
     private  ArrayMap<String,StatusBarNotification> mAllNotifications = new ArrayMap<>();
-    private  ArrayMap<String,AppRow> mStick = new ArrayMap<String,AppRow>();
-     
+
     private NotificationBinAdapter mAdapter;
 
     @Override
@@ -79,8 +77,6 @@ public class NotificationBinStored extends PinnedHeaderListFragment
         mAdapter = new NotificationBinAdapter(mContext);
         mUM = UserManager.get(mContext);
         mPM = mContext.getPackageManager();
-        mLauncherApps = (LauncherApps) mContext.getSystemService(Context.LAUNCHER_APPS_SERVICE);
-
 
 
         SbnRecevier sbnRecevier = new SbnRecevier();

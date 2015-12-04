@@ -134,11 +134,16 @@ public class NotificationBinHidden extends PinnedHeaderListFragment
         SharedPreferences sharedPrefs;
         sharedPrefs = context.getSharedPreferences(settings_FileName,Context.MODE_PRIVATE);
         Map<String, ?> allEntries = sharedPrefs.getAll();
+
+
+        Log.d("YAAP","Pref all map "+allEntries);
         Bundle sharedPrefbundle = new Bundle();
 
         for (Map.Entry<String, ?> entry : allEntries.entrySet()) {
             sharedPrefbundle.putBoolean(entry.getKey(),(Boolean)entry.getValue());
-        } 
+        }
+
+        Log.d("YAAP","Pref all bundle "+sharedPrefbundle.size());
 
 
         //Make a new intent and broadcast it for system ui to catch it
