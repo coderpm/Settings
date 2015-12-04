@@ -1991,7 +1991,7 @@
                 android:label="@string/notificationbin_app_title"
                 android:exported="true"
                 android:taskAffinity="">
-        </activity>        
+        </activity>
 
         <receiver
                 android:name=".notification.NotificationBinHidden$PrefReceiverStat">
@@ -2000,7 +2000,6 @@
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </receiver>
-
 
         <!-- End of additions by Pratham Malik for Notification bin for Project Yaap-->
 

@@ -44,7 +44,7 @@ import com.android.settings.Utils;
 
 import java.text.Collator;
 import java.util.*;
-
+import java.util.Map;
 
 import android.service.notification.StatusBarNotification;
 import android.content.SharedPreferences;
@@ -87,9 +87,7 @@ public class NotificationBinHidden extends PinnedHeaderListFragment
     private SharedPreferences preferenceSetting;
     private Editor preferenceSettingEditor;
     String settings_FileName = "notificationbin_settings";
-
-
-
+    
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -111,12 +109,13 @@ public class NotificationBinHidden extends PinnedHeaderListFragment
              
     } //End of onCreate Method
 
-    /** Static intent receiver to receive request from SystemUI **/
-/*    public static  class PrefReceiverStat extends BroadcastReceiver{
+    /** Static intent receiver to receive request from SystemUI for 
+        sending the file contents back to SystemUI
+     **/
+    public static  class PrefReceiverStat extends BroadcastReceiver{
 
         @Override
         public void onReceive(Context context, Intent intent) {
-
 
             String action = intent.getAction();
             Log.d("YAAP","Preferences Receiver "+ action);
@@ -131,18 +130,40 @@ public class NotificationBinHidden extends PinnedHeaderListFragment
 
     private static void getSharedPreferencesData(Context context, Intent intent) {
 
-        String appName = intent.getStringExtra("com.android.systemui.appname");
-//        int appId = intent.getIntExtra("com.android.systemui.appID");
+        //Get the Map from SharedPreferences file
+        private SharedPreferences sharedPrefs;
+        sharedPrefs = context.getSharedPreferences(settings_FileName,Context.MODE_PRIVATE);
+        Map<String, Boolean> allEntries = sharedPrefs.getAll();
+        Bundle sharedPrefbundle = new Bundle();
 
-        if(appName != null){
+        for (Map.Entry<String, Boolean> entry : allEntries.entrySet()) {
+            sharedPrefbundle.putBoolean(entry.getKey(),entry.getValue());
+        } 
 
-            //Make a new intent and broadcast it for system ui to catch it
-            Intent sendPref = new Intent();
-            sendPref.setAction("com.android.settings.sendPref");
-            sendPref.putExtra("com.android.settings.preferenceflag",1);
-            context.sendBroadcast(sendPref);
-        }       
-    }*/
+
+        //Make a new intent and broadcast it for system ui to catch it
+        Intent sendPref = new Intent();
+        sendPref.setAction("com.android.settings.sendPref");
+        sendPref.putExtra("com.android.settings.prefBundle",sharedPrefbundle);
+        context.sendBroadcast(sendPref);
+    }
+
+    private static void sendSharedPreferencesData() {
+
+        //Get the Map from SharedPreferences file
+        Map<String, Boolean> allEntries = preferenceSetting.getAll();
+        Bundle sharedPrefbundle = new Bundle();
+
+        for (Map.Entry<String, Boolean> entry : allEntries.entrySet()) {
+            sharedPrefbundle.putBoolean(entry.getKey(),entry.getValue());
+        } 
+
+        //Make a new intent and broadcast it for system ui to catch it
+        Intent sendPref = new Intent();
+        sendPref.setAction("com.android.settings.sendPref");
+        sendPref.putExtra("com.android.settings.prefBundle",sharedPrefbundle);
+        context.sendBroadcast(sendPref);
+    }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -376,6 +397,10 @@ public class NotificationBinHidden extends PinnedHeaderListFragment
                     Boolean isChecked = buttonView.isChecked();
                     preferenceSettingEditor.putBoolean(row.pkg+"_normal",isChecked);
                     Boolean commitResult = preferenceSettingEditor.commit();
+
+                    //Send a intent to SystemUI
+                    sendSharedPreferencesData();
+
                     Boolean result = preferenceSetting.getBoolean(row.pkg+"_normal",false);
                     Log.d("YAAP","Trying for "+isChecked+", Getting "+result+" "+row.pkg +" "+"and commit "+commitResult);
                 }
