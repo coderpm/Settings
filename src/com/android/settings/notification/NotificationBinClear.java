@@ -52,8 +52,8 @@ import android.content.SharedPreferences.Editor;
 
 
 /** Just a sectioned list of installed applications, nothing else to index **/
-public class NotificationBinHidden extends ListFragment
-{
+public class NotificationBinClear extends PinnedHeaderListFragment
+       {
     private static final String TAG = "YAAP";
     private static final boolean DEBUG = Log.isLoggable(TAG, Log.DEBUG);
 
@@ -65,7 +65,10 @@ public class NotificationBinHidden extends ListFragment
                 .addCategory(Notification.INTENT_CATEGORY_NOTIFICATION_PREFERENCES);
 
     private final Handler mHandler = new Handler();
+    private final ArrayMap<String, AppRow> mRows = new ArrayMap<String, AppRow>();
+    private final ArrayList<AppRow> mSortedRows = new ArrayList<AppRow>();
     
+
     private Context mContext;
     private LayoutInflater mInflater;
     private Signature[] mSystemSignature;
@@ -93,16 +96,57 @@ public class NotificationBinHidden extends ListFragment
         mInflater = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         mAdapter = new NotificationBinAdapter(mContext);
         mUM = UserManager.get(mContext);
+        mPM = mContext.getPackageManager();
+        mLauncherApps = (LauncherApps) mContext.getSystemService(Context.LAUNCHER_APPS_SERVICE);
        
-        getActivity().setTitle(R.string.notificationbin_clear_title);
+        getActivity().setTitle(R.string.notificationbin_settings_title);
 
         //TODO: GET the shared preference data from xml
         preferenceSetting = mContext.getSharedPreferences(settings_FileName,Context.MODE_WORLD_WRITEABLE);
         preferenceSettingEditor = preferenceSetting.edit();
 
-        Log.d("YAAP", "Inside onCreate of NotificationBinClear");
+        Log.d("YAAP", "Inside onCreate of NotificationBin Settings");
              
     } //End of onCreate Method
+
+    /** Static intent receiver to receive request from SystemUI for 
+        sending the file contents back to SystemUI
+     **/
+    public static  class PrefReceiverStat extends BroadcastReceiver{
+
+        @Override
+        public void onReceive(Context context, Intent intent) {
+
+            String action = intent.getAction();
+            Log.d("YAAP","Preferences Receiver "+ action);
+
+            if (action.equals("com.android.systemui.getPreference")){
+                    getSharedPreferencesData(context,intent);
+            }else{
+                Log.e("YAAP","Unknown getPreference action intent");
+            }
+        }
+    }
+
+    private static void getSharedPreferencesData(Context context, Intent intent) {
+
+        //Get the Map from SharedPreferences file
+        SharedPreferences sharedPrefs;
+        sharedPrefs = context.getSharedPreferences(settings_FileName,Context.MODE_PRIVATE);
+        Map<String, ?> allEntries = sharedPrefs.getAll();
+        Bundle sharedPrefbundle = new Bundle();
+
+        for (Map.Entry<String, ?> entry : allEntries.entrySet()) {
+            sharedPrefbundle.putBoolean(entry.getKey(),(Boolean)entry.getValue());
+        } 
+
+
+        //Make a new intent and broadcast it for system ui to catch it
+        Intent sendPref = new Intent();
+        sendPref.setAction("com.android.settings.sendPref");
+        sendPref.putExtra("com.android.settings.prefBundle",sharedPrefbundle);
+        context.sendBroadcast(sendPref);
+    }
 
     private void sendSharedPreferencesData() {
 
@@ -128,13 +172,23 @@ public class NotificationBinHidden extends ListFragment
     }
 
     @Override
+    public void onViewCreated(View view, Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+        mProfileSpinnerAdapter = Utils.createUserSpinnerAdapter(mUM, mContext);
+        if (mProfileSpinnerAdapter != null) {
+            mSpinner = (Spinner) getActivity().getLayoutInflater().inflate(
+                    R.layout.spinner_view, null);
+            mSpinner.setAdapter(mProfileSpinnerAdapter);
+//            mSpinner.setOnItemSelectedListener(this);
+            setPinnedHeaderView(mSpinner);
+        }
+    }
+
+    @Override
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
-        String[] values = new String[] { "First","Second" };
-    
-    ArrayAdapter<String> adapter = new ArrayAdapter<String>(mContext,
-        R.layout.notificationbin_clear_list, values);
-    getListView().setAdapter(mAdapter);
+        repositionScrollbar();
+        getListView().setAdapter(mAdapter);
     }
 
     @Override
@@ -153,24 +207,44 @@ public class NotificationBinHidden extends ListFragment
     @Override
     public void onResume() {
         super.onResume();
+        loadAppsList();
+    }
+
+    public void loadAppsList() {
+        Log.d("YAAP","in FUnction loadAppsList");
+        AsyncTask.execute(mCollectAppsRunnable);
+    }
+
+    private void repositionScrollbar() {
+    
+        final int sbWidthPx = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP,
+                getListView().getScrollBarSize(),
+                getResources().getDisplayMetrics());
+        final View parent = (View)getView().getParent();
+        final int eat = Math.min(sbWidthPx, parent.getPaddingEnd());
+        if (eat <= 0) return;
+        if (DEBUG) Log.d(TAG, String.format("Eating %dpx into %dpx padding for %dpx scroll, ld=%d",
+                eat, parent.getPaddingEnd(), sbWidthPx, getListView().getLayoutDirection()));
+        parent.setPaddingRelative(parent.getPaddingStart(), parent.getPaddingTop(),
+                parent.getPaddingEnd() - eat, parent.getPaddingBottom());
     }
 
     /** Corresponds to entries in R.layout.notificationbin_settings **/
     private static class ViewHolder {
         ViewGroup row;
         TextView title;
-        TextView subtitle;
         CheckBox toggleSwitch;
         View rowDivider;
+    
     }
 
     public static class AppRow {
         
         //Used for AppInfo object         
-        public String rowName;
+        public String pkg;
     }
 
-    private class NotificationBinAdapter extends BaseAdapter {
+        private class NotificationBinAdapter extends ArrayAdapter<AppRow> {
         public NotificationBinAdapter(Context context) {
             super(context, 0, 0);
         }
@@ -207,7 +281,6 @@ public class NotificationBinHidden extends ListFragment
                 return mInflater.inflate(R.layout.notification_app_section, parent, false);
             }
             final View v = mInflater.inflate(R.layout.notificationbin_clear_list, parent, false);
-            
             final ViewHolder vh = new ViewHolder();
             vh.row = (ViewGroup) v;
             vh.row.setLayoutTransition(new LayoutTransition());
@@ -230,16 +303,40 @@ public class NotificationBinHidden extends ListFragment
         }
 
         public void bindView(final View view, AppRow r, boolean animate) {
+            if (!(r instanceof AppRow)) {
+                // it's a section row
+                final TextView tv = (TextView)view.findViewById(android.R.id.title);
+                tv.setText(r.pkg);
+                return;
+            }
 
             final AppRow row = r;
             final ViewHolder vh = (ViewHolder) view.getTag();
             enableLayoutTransitions(vh.row, animate);
             enableLayoutTransitions(vh.row, animate);
             
-            vh.title.setText(row.label);
-            vh.icon.setImageDrawable(row.icon);
+            vh.title.setText(row.pkg);
         }
     } /** End of NotificationBinAdapter class **/
 
+
+    private final Runnable mCollectAppsRunnable = new Runnable() {
+
+        @Override
+        public void run() {
+
+            mSortedRows.clear();
+            Approw row = new Approw();
+            row.pkg = "First";
+
+            mSortedRows.add(row);
+    
+            mAdapter.clear();
+            mAdapter.add(row);
+
+        }/** End of run method **/
+    };
+
+    
 
 } /** End of class */
