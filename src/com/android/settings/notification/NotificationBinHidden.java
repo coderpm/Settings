@@ -32,16 +32,8 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
-import android.widget.AdapterView;
+import android.widget.*;
 import android.widget.AdapterView.OnItemSelectedListener;
-import android.widget.ArrayAdapter;
-import android.widget.ImageView;
-import android.widget.SectionIndexer;
-import android.widget.Spinner;
-import android.widget.TextView;
-import android.widget.Button;
-import android.widget.Switch;
-import android.widget.CompoundButton;
 import android.widget.CompoundButton.OnCheckedChangeListener;
 
 import com.android.settings.PinnedHeaderListFragment;
@@ -61,7 +53,7 @@ import android.content.SharedPreferences.Editor;
 
 /** Just a sectioned list of installed applications, nothing else to index **/
 public class NotificationBinHidden extends PinnedHeaderListFragment
-        implements OnItemSelectedListener {
+       {
     private static final String TAG = "YAAP";
     private static final boolean DEBUG = Log.isLoggable(TAG, Log.DEBUG);
 
@@ -104,7 +96,7 @@ public class NotificationBinHidden extends PinnedHeaderListFragment
         super.onCreate(savedInstanceState);
         mContext = getActivity();
         mInflater = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-        mAdapter = new NotificationBinAdapter(mCollectAppsRunnableContext);
+        mAdapter = new NotificationBinAdapter(mContext);
         mUM = UserManager.get(mContext);
         mPM = mContext.getPackageManager();
         mLauncherApps = (LauncherApps) mContext.getSystemService(Context.LAUNCHER_APPS_SERVICE);
@@ -112,7 +104,7 @@ public class NotificationBinHidden extends PinnedHeaderListFragment
         getActivity().setTitle(R.string.notificationbin_settings_title);
 
         //TODO: GET the shared preference data from xml
-        preferenceSetting = mContext.getSharedPreferences(settings_FileName,Context.MODE_WORLD_READABLE);
+        preferenceSetting = mContext.getSharedPreferences(settings_FileName,Context.MODE_WORLD_WRITEABLE);
         preferenceSettingEditor = preferenceSetting.edit();
 
         Log.d("YAAP", "Inside onCreate of NotificationBin Settings");
@@ -166,7 +158,7 @@ public class NotificationBinHidden extends PinnedHeaderListFragment
             mSpinner = (Spinner) getActivity().getLayoutInflater().inflate(
                     R.layout.spinner_view, null);
             mSpinner.setAdapter(mProfileSpinnerAdapter);
-            mSpinner.setOnItemSelectedListener(this);
+//            mSpinner.setOnItemSelectedListener(this);
             setPinnedHeaderView(mSpinner);
         }
     }
@@ -197,24 +189,24 @@ public class NotificationBinHidden extends PinnedHeaderListFragment
         loadAppsList();
     }
 
-    @Override
-    public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-        Log.d("YAAP", "in onItemSelected");
-        UserHandle selectedUser = mProfileSpinnerAdapter.getUserHandle(position);
-        if (selectedUser.getIdentifier() != UserHandle.myUserId()) {
-            Intent intent = new Intent(getActivity(), NotificationAppListActivity.class);
-            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
-            mContext.startActivityAsUser(intent, selectedUser);
-            // Go back to default selection, which is the first one; this makes sure that pressing
-            // the back button takes you into a consistent state
-            mSpinner.setSelection(0);
-        }
-    }
-
-    @Override
-    public void onNothingSelected(AdapterView<?> parent) {
-    }
+//    @Override
+//    public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+//        Log.d("YAAP", "in onItemSelected");
+//        UserHandle selectedUser = mProfileSpinnerAdapter.getUserHandle(position);
+//        if (selectedUser.getIdentifier() != UserHandle.myUserId()) {
+//            Intent intent = new Intent(getActivity(), NotificationAppListActivity.class);
+//            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+//            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
+//            mContext.startActivityAsUser(intent, selectedUser);
+//            // Go back to default selection, which is the first one; this makes sure that pressing
+//            // the back button takes you into a consistent state
+//            mSpinner.setSelection(0);
+//        }
+//    }
+//
+//    @Override
+//    public void onNothingSelected(AdapterView<?> parent) {
+//    }
 
     public void loadAppsList() {
         Log.d("YAAP","in FUnction loadAppsList");
@@ -241,7 +233,7 @@ public class NotificationBinHidden extends PinnedHeaderListFragment
         ImageView icon;
         TextView title;
         TextView subtitle;
-        Switch toggleSwitch;
+        CheckBox toggleSwitch;
         View rowDivider;
     
     }
@@ -274,15 +266,15 @@ public class NotificationBinHidden extends PinnedHeaderListFragment
 
         @Override
         public int getViewTypeCount() {
-            return 2;
+            return 1;
         }
 
-        @Override
-        public int getItemViewType(int position) {
-            Log.d("YAAP", "in getItemViewType");
-            AppRow r = getItem(position);
-            return r instanceof AppRow ? 1 : 0;
-        }
+//        @Override
+//        public int getItemViewType(int position) {
+//            Log.d("YAAP", "in getItemViewType");
+//            AppRow r = getItem(position);
+//            return r instanceof AppRow ? 1 : 0;
+//        }
 
         public View getView(int position, View convertView, ViewGroup parent) {
             AppRow r = getItem(position);
@@ -307,7 +299,7 @@ public class NotificationBinHidden extends PinnedHeaderListFragment
             vh.row.setLayoutTransition(new LayoutTransition());
             vh.title = (TextView) v.findViewById(android.R.id.title);
             vh.icon = (ImageView) v.findViewById(android.R.id.icon);
-            vh.toggleSwitch = (Switch) v.findViewById(R.id.binswitch);
+            vh.toggleSwitch = (CheckBox) v.findViewById(R.id.binswitch);
             vh.rowDivider = v.findViewById(R.id.row_divider);
             v.setTag(vh);
             return v;
@@ -343,14 +335,16 @@ public class NotificationBinHidden extends PinnedHeaderListFragment
                 if no -- appName not in preference 
                     then add appname in preference file     
 */
-            boolean checkappName = preferenceSetting.getBoolean(row.pkg+"_normal",false);
+
+
             if(preferenceSetting.contains(row.pkg+"_normal")){
+                boolean checkappName = preferenceSetting.getBoolean(row.pkg+"_normal",false);
                 Log.d("YAAP","Appname: "+row.pkg+" is present");
-                if(checkappName == true){
+                if(checkappName ){
                     //Set default value to it
                     vh.toggleSwitch.setChecked(true);
                     Log.d("YAAP","Appname: "+row.pkg+" checked to true");
-                }else if(checkappName == false){
+                }else {
                     //Set default value to it
                     vh.toggleSwitch.setChecked(false);
                     Log.d("YAAP","Appname: "+row.pkg+" checked to false");
@@ -358,29 +352,35 @@ public class NotificationBinHidden extends PinnedHeaderListFragment
             }else{
                 Log.d("YAAP","Appname: "+row.pkg+" is not present");
                 //Appname is not present
-                preferenceSettingEditor.putBoolean(row.pkg+"_normal",true);       
+                preferenceSettingEditor.putBoolean(row.pkg+"_normal",false);
                 preferenceSettingEditor.commit();
             }
 
 
             //Listener for changed Listener for Switch
-            vh.toggleSwitch.setOnCheckedChangeListener(new OnCheckedChangeListener() {
+//            vh.toggleSwitch.setOnCheckedChangeListener(new OnCheckedChangeListener() {
+//                @Override
+//                public void onCheckedChanged(CompoundButton buttonView,boolean isChecked){
+//                    preferenceSettingEditor.putBoolean(row.pkg+"_normal",isChecked);
+//                    Boolean commitResult = preferenceSettingEditor.commit();
+//                    Boolean result = preferenceSetting.getBoolean(row.pkg+"_normal",false);
+//                    Log.d("YAAP","Trying for "+isChecked+", Getting "+result+" "+row.pkg +" "+"and commit "+commitResult);
+//                    notifyDataSetChanged();
+//               }
+//            });
 
+            vh.toggleSwitch.setOnClickListener(new OnClickListener() {
                 @Override
-                public void onCheckedChanged(CompoundButton buttonView,boolean isChecked){
-
-                if(isChecked){
-                    Log.d("YAAP","Checked is true");     
-                    preferenceSettingEditor.putBoolean(row.pkg+"_normal",true);       
-                    preferenceSettingEditor.commit();
-                }else{
-                    preferenceSettingEditor.putBoolean(row.pkg+"_normal",false);       
-                    preferenceSettingEditor.commit();
-                    Log.d("YAAP","Checked is false");            
+                public void onClick(View view) {
+                    CheckBox buttonView = (CheckBox) view;
+                    Boolean isChecked = buttonView.isChecked();
+                    preferenceSettingEditor.putBoolean(row.pkg+"_normal",isChecked);
+                    Boolean commitResult = preferenceSettingEditor.commit();
+                    Boolean result = preferenceSetting.getBoolean(row.pkg+"_normal",false);
+                    Log.d("YAAP","Trying for "+isChecked+", Getting "+result+" "+row.pkg +" "+"and commit "+commitResult);
                 }
+            });
 
-               }
-            });            
             vh.title.setText(row.label);
             vh.icon.setImageDrawable(row.icon);
         }

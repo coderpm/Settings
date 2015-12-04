@@ -60,13 +60,14 @@ public class NotificationBinStored extends PinnedHeaderListFragment
     private Parcelable mListViewState;
     private UserSpinnerAdapter mProfileSpinnerAdapter;
     private Spinner mSpinner;
+    private ArrayMap<String,Drawable> mIconMap = new ArrayMap<>();
 
     private static PackageManager mPM;
     private UserManager mUM;
     private LauncherApps mLauncherApps;
 
-    private static ArrayMap<String,StatusBarNotification> mAllNotifications = new ArrayMap<>();
-    private ArrayMap<String,AppRow> mStick = new ArrayMap<String,AppRow>();
+    private  ArrayMap<String,StatusBarNotification> mAllNotifications = new ArrayMap<>();
+    private  ArrayMap<String,AppRow> mStick = new ArrayMap<String,AppRow>();
      
     private NotificationBinAdapter mAdapter;
 
@@ -116,7 +117,7 @@ public class NotificationBinStored extends PinnedHeaderListFragment
         }
     }
 
-    private static void updateArrayMap(Intent intent) {
+    private void updateArrayMap(Intent intent) {
         Bundle sbnBundle = intent.getBundleExtra("com.android.systemui.sbnMap");
         ArrayMap<String, StatusBarNotification> arrayMap = new ArrayMap<>();
         for (String sbnKey : sbnBundle.keySet()){
@@ -125,6 +126,7 @@ public class NotificationBinStored extends PinnedHeaderListFragment
         }
         mAllNotifications = arrayMap;
     }
+
 
 
     @Override
@@ -357,6 +359,15 @@ public class NotificationBinStored extends PinnedHeaderListFragment
 
             
             enableLayoutTransitions(vh.row, animate);
+
+            if(row.title == null){
+                try {
+                    ApplicationInfo appInfo = mContext.getPackageManager().getApplicationInfo(row.pkg,0);
+                    row.title = mContext.getPackageManager().getApplicationLabel(appInfo).toString();
+                } catch (NameNotFoundException e) {
+                    e.printStackTrace();
+                }
+            }
             String title = row.title == null? row.pkg:row.title;
             vh.title.setText(title);
             Log.d("YAAP","Bind view Row "+row.icon);
@@ -392,7 +403,7 @@ public class NotificationBinStored extends PinnedHeaderListFragment
     } /** End of NotificationBinAdapter class **/
 
 
-    public static AppRow loadAppRow(StatusBarNotification statusBarObj) {
+    public AppRow loadAppRow(StatusBarNotification statusBarObj) {
         final AppRow row = new AppRow();
         Log.d("YAAP","Loading StatusBarNotification data in loadAppRow");
         row.pkg = statusBarObj.getPackageName();
@@ -404,31 +415,35 @@ public class NotificationBinStored extends PinnedHeaderListFragment
         row.notification = statusBarObj.getNotification();
         row.postTime = statusBarObj.getPostTime();
         row.key = statusBarObj.getKey();
-        CharSequence title = statusBarObj.getNotification().extras.getCharSequence(Notification.EXTRA_TEXT);
-        row.title = title==null?row.pkg:title.toString();
-        CharSequence subText = statusBarObj.getNotification().extras.getString(Notification.EXTRA_SUB_TEXT);
+        CharSequence title = statusBarObj.getNotification().extras.getCharSequence(Notification.EXTRA_TITLE);
+        row.title = title==null?null:title.toString();
+        CharSequence subText = statusBarObj.getNotification().extras.getString(Notification.EXTRA_TEXT);
         if(subText == null){
             subText = statusBarObj.getNotification().tickerText;
         }
+
         String dateString = new SimpleDateFormat("hh:mm:ss MM/dd/yyyy").format(new Date(row.postTime));
 
         row.contentText = subText==null?"Posted at "+dateString:subText.toString();
         row.contentIntent = statusBarObj.getNotification().contentIntent;
 
+        row.icon = mIconMap.get(statusBarObj.getKey());
 
-
-        try{
-            ApplicationInfo appIn = mPM.getApplicationInfo(row.pkg,0);
-            row.icon = mPM.getApplicationIcon(appIn);
-
-        }catch(NameNotFoundException e){
-            Log.d("YAAP","Application name not found in APPINFO");
-            e.printStackTrace();
-        }
         if(row.icon == null){
-            Log.d("YAAP","Setting row.icon "+row.icon);
-            row.icon = mPM.getDefaultActivityIcon();
+            try{
+                ApplicationInfo appIn = mPM.getApplicationInfo(row.pkg,0);
+                row.icon = mPM.getApplicationIcon(appIn);
+
+            }catch(NameNotFoundException e){
+                Log.d("YAAP","Application name not found in APPINFO");
+                e.printStackTrace();
+            }
+            if(row.icon == null){
+                Log.d("YAAP","Setting row.icon "+row.icon);
+                row.icon = mPM.getDefaultActivityIcon();
+            }
         }
+
     
         return row;
     }

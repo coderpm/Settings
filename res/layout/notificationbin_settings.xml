@@ -52,7 +52,7 @@
         android:textColor="?android:attr/textColorSecondary"
         android:textAppearance="?android:attr/textAppearanceSmall" />
 
-    <Switch
+    <CheckBox
         android:id="@+id/binswitch"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
